@@ -14,6 +14,53 @@
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
 <link rel="manifest" href="/site.webmanifest">
 
+<!-- Analytics. Deliberately narrow, because this page's whole pitch is privacy.
+     Three things are switched off or scrubbed:
+       1. session recording, which would record people's images on screen
+       2. autocapture, which would hoover up the URL field's contents
+       3. the query string, because ?url=<image> IS the thing being searched
+     What is left is counts: pageviews, which buttons get pressed, and booleans
+     about whether EXIF was present. No filenames, no URLs, no EXIF values. -->
+<script>
+  (function(){
+    try {
+      if (location.hash === '#internal') localStorage.setItem('ris_internal', '1');
+      if (location.hash === '#public') localStorage.removeItem('ris_internal');
+      window.__RIS_INTERNAL = localStorage.getItem('ris_internal') === '1';
+    } catch (e) {}
+  })();
+</script>
+<script>
+  !function(t,e){var o,n,p,r;e.__SV||(window.posthog=e,e._i=[],e.init=function(i,s,a){function g(t,e){var o=e.split(".");2==o.length&&(t=t[o[0]],e=o[1]);t[e]=function(){t.push([e].concat(Array.prototype.slice.call(arguments,0)))}}(p=t.createElement("script")).type="text/javascript",p.async=!0,p.src=s.api_host+"/static/array.js",(r=t.getElementsByTagName("script")[0]).parentNode.insertBefore(p,r);var u=e;for(void 0!==a?u=e[a]=[]:a="posthog",u.people=u.people||[],u.toString=function(t){var e="posthog";return"posthog"!==a&&(e+="."+a),t||(e+=" (stub)"),e},u.people.toString=function(){return u.toString(1)+".people (stub)"},o="capture identify alias people.set people.set_once set_config register register_once unregister opt_out_capturing has_opted_out_capturing opt_in_capturing reset isFeatureEnabled onFeatureFlags getFeatureFlag getFeatureFlagPayload reloadFeatureFlags group updateEarlyAccessFeatureEnrollment getEarlyAccessFeatures getActiveMatchingSurveys getSurveys getNextSurveyStep".split(" "),n=0;n<o.length;n++)g(u,o[n]);e._i.push([i,s,a])},e.__SV=1)}(document,window.posthog||[]);
+
+  // Strip the query string and hash off anything URL shaped before it leaves
+  // the browser. ?url= carries the image being searched.
+  function risScrub(props) {
+    ["$current_url", "$referrer", "$initial_current_url", "$pathname"].forEach(function (k) {
+      var v = props[k];
+      if (typeof v !== "string") return;
+      props[k] = v.split("?")[0].split("#")[0];
+    });
+    return props;
+  }
+
+  posthog.init('phc_C6ScWLnpP7LeHst7KxHdqyGAgUfC9n6eEE2fV9uM79yf', {
+    api_host: 'https://us.i.posthog.com',
+    person_profiles: 'identified_only',
+    autocapture: false,                 // would capture the URL input's contents
+    disable_session_recording: true,    // would record people's images
+    capture_pageleave: true,
+    sanitize_properties: risScrub
+  });
+  posthog.register({ site: 'freereverseimagesearch' });
+  if (window.__RIS_INTERNAL) posthog.opt_out_capturing();
+
+  // Small helper so the rest of the page never talks to posthog directly.
+  window.risTrack = function (name, props) {
+    try { if (window.posthog && posthog.capture) posthog.capture(name, props || {}); } catch (e) {}
+  };
+</script>
+
 <style>
   /* Heavy blackwork: thick black rules, hard offset shadows, no blur.
      Monospace throughout, matching the Mental Bank Ledger house style. */
@@ -464,6 +511,11 @@
     <p>It costs nothing to run, which is why it can stay free: the whole tool is one HTML file
     that does its work in your browser. There is no server holding your images, so there is no
     bill that would eventually have to be passed on to you.</p>
+    <p><strong>What is measured.</strong> This page counts visits and which buttons get used,
+    so it is possible to tell whether any of it is useful. Your images are not part of that:
+    no file, no filename, no image address, and no EXIF values ever leave your browser.
+    Session recording is off and the address bar is stripped of its query before anything is
+    sent, because the address can contain the very image you are searching for.</p>
   </section>
 
   <footer>
@@ -844,6 +896,9 @@
         a.append(el("span", { className: "name", textContent: e.name }),
                  el("span", { className: "desc", textContent: e.desc }));
         if (ON_PHONE && e.phone) a.append(el("span", { className: "phone-note", textContent: e.phone }));
+        a.addEventListener("click", function () {
+          risTrack("engine_click", { engine: e.name, mode: "url", phone: ON_PHONE });
+        });
         box.append(a);
       }
     } else {
@@ -870,6 +925,9 @@
         a.append(el("span", { className: "name", textContent: e.name }),
                  el("span", { className: "desc", textContent: e.desc }));
         if (ON_PHONE && e.phone) a.append(el("span", { className: "phone-note", textContent: e.phone }));
+        a.addEventListener("click", function () {
+          risTrack("engine_click", { engine: e.name, mode: "upload", phone: ON_PHONE });
+        });
         box.append(a);
       }
     }
@@ -999,8 +1057,8 @@
     try {
       navigator.clipboard
         .write([new ClipboardItem({ "image/png": toPng(currentBlob) })])
-        .then(() => toast("Image copied. Paste it into the engine."))
-        .catch(() => toast("The browser blocked the clipboard. Use Share instead."));
+        .then(() => { risTrack("copy_click", { result: "ok" }); toast("Image copied. Paste it into the engine."); })
+        .catch(() => { risTrack("copy_click", { result: "blocked" }); toast("The browser blocked the clipboard. Use Share instead."); });
     } catch (err) {
       toast("The browser blocked the clipboard. Use Share instead.");
     }
@@ -1027,6 +1085,7 @@
   async function shareImage() {
     if (!currentBlob) return;
     try {
+      risTrack("share_click", { phone: ON_PHONE });
       await navigator.share({ files: [asFile(currentBlob)] });
     } catch (err) {
       if (err && err.name !== "AbortError") toast("Sharing was not available.");
@@ -1072,6 +1131,12 @@
 
     try {
       const img = await loadImageElement(currentObjUrl, false);
+      risTrack("image_loaded", {
+        source: "file",
+        exif_found: !!(exif && exif.count),
+        has_gps: !!(exif && exif.gps),
+        has_software: !!(exif && exif.fields && exif.fields["Software"])
+      });
       show({ name: file.name, type: file.type, size: file.size, source: "Local file" }, img, exif, null);
     } catch (err) {
       toast("That image could not be decoded.");
@@ -1121,6 +1186,12 @@
     }
 
     const name = decodeURIComponent(parsed.pathname.split("/").pop() || "") || parsed.hostname;
+    risTrack("image_loaded", {
+      source: "url",
+      exif_found: !!(exif && exif.count),
+      has_gps: !!(exif && exif.gps),
+      has_software: !!(exif && exif.fields && exif.fields["Software"])
+    });
     show({ name, type: "Remote image", size: bytes, source: parsed.hostname }, img, exif, url);
   }
 

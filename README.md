@@ -108,6 +108,31 @@ Tested at 393px. Three things needed fixing that only showed up at that width:
 Color blocks keep their exact hue in dark mode, the way ink on a printed page would. Only
 the surfaces around them invert, and `--edge` flips to near-white so the linework survives.
 
+## Analytics
+
+The page reports counts to PostHog, and is deliberately narrow about it because the whole
+pitch here is privacy. Three things are switched off or scrubbed:
+
+- **Session recording is disabled.** It would record people's images on screen.
+- **Autocapture is disabled.** It would collect the contents of the URL field.
+- **The query string is stripped** off `$current_url`, `$referrer` and `$pathname` before
+  anything is sent, via `sanitize_properties`. This one is not optional: the page accepts
+  `?url=<image>`, so the address bar literally contains the image being searched.
+
+What is left is counts and booleans: pageviews, which engine buttons get pressed, whether
+an image arrived from a file or a URL, and whether it had EXIF, GPS or an editing-software
+tag. **No filenames, no image addresses, and no EXIF values are ever sent.** The page says
+so plainly in its own copy rather than burying it.
+
+Visiting `/#internal` opts a device out permanently (`/#public` undoes it), which exists
+because self-traffic badly polluted the numbers on an earlier project.
+
+Reporting lives in the analytics repo, not here:
+
+```bash
+cd ~/qrcodepro-analytics && ./venv/bin/python revimg_report.py 30
+```
+
 ## Tests
 
 ```bash
