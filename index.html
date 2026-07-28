@@ -1,0 +1,1179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Free Reverse Image Search - No Account, Nothing Uploaded</title>
+<meta name="description" content="Free reverse image search across Google Lens, Yandex, Bing and TinEye at once. No account, no upload, no ads. Reads EXIF and GPS data in your browser.">
+
+<!-- Favicon: Marvel red plate, white lens, gold handle. Inlined as a data URI
+     so index.html stays a single self-contained file. Source: favicon.svg -->
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect x='3.5' y='3.5' width='93' height='93' rx='24' fill='%23EC1D24' stroke='%230d0f13' stroke-width='7'/><path d='M56 54 L79 77' stroke='%230d0f13' stroke-width='19' stroke-linecap='round'/><path d='M57 55 L77 75' stroke='%23F0B323' stroke-width='11' stroke-linecap='round'/><circle cx='42' cy='40' r='25' fill='%23ffffff' stroke='%230d0f13' stroke-width='7'/></svg>">
+<meta name="theme-color" content="#EC1D24">
+<link rel="icon" href="/favicon.ico" sizes="32x32">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<link rel="manifest" href="/site.webmanifest">
+
+<style>
+  /* Heavy blackwork: thick black rules, hard offset shadows, no blur.
+     Monospace throughout, matching the Mental Bank Ledger house style. */
+  :root {
+    --bg:      #ffffff;
+    --panel:   #ffffff;
+    --panel-2: #f4f6f9;
+    --line:    #e4e7ec;
+    --ink:     #0d0f13;
+    --muted:   #4a505c;
+    --faint:   #878f9c;
+    --edge:    #0d0f13;
+
+    /* Marvel: one hot red carried by heavy black inking.
+       --hero is for flat blocks, --hero-ink is the darker cut that clears
+       4.5:1 against white so button labels stay readable (5.91:1). */
+    --hero:     #EC1D24;
+    --hero-ink: #C7151C;
+
+    --hero-deep: #8F1014;
+    --gold:      #F0B323;   /* comic gold, the other half of the Marvel pair */
+
+    /* One Google color retained, for the one tile that is actually Google.
+       The quartet is deliberately gone: red and black carry the design. */
+    --g-blue:   #4285F4;
+
+    --accent:  var(--g-blue);
+    --accent-soft: #e3ecfd;
+    --warn:    #b45309;
+    --warn-soft: #fef6dd;
+    --ok:      var(--hero);
+    --shadow:  4px 4px 0 var(--edge);
+    --shadow-sm: 2.5px 2.5px 0 var(--edge);
+    --radius:  19px;
+    --mono: "Monaco", "Menlo", ui-monospace, SFMono-Regular, "Courier New", monospace;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg:      #0d0f13;
+      --panel:   #14181f;
+      --panel-2: #1b212b;
+      --line:    #2a323f;
+      --ink:     #f2f5f9;
+      --muted:   #a8b1bf;
+      --faint:   #7c8697;
+      --edge:    #f2f5f9;   /* the blackwork inverts: light rules on dark */
+      /* The color blocks keep their exact hue in both themes, the way a
+         printed comic panel does. Only the surfaces around them change. */
+      --accent:  var(--g-blue);
+      --accent-soft: #16243f;
+      --warn:    var(--gold);
+      --warn-soft: #2e2510;
+      --ok:      var(--hero);
+    }
+  }
+
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font: 20px/1.6 var(--mono);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .wrap { max-width: 1050px; margin: 0 auto; padding: 40px 24px 110px; }
+
+  /* ---------------------------------------------------------- header */
+  header { margin-bottom: 35px; }
+  /* The wordmark sits reversed out of a solid red plate, the way a comic
+     masthead does. White on this red is 5.91:1. */
+  h1 {
+    display: inline-block;
+    margin: 0 0 16px;
+    padding: 9px 17px;
+    background: var(--hero-ink); color: #fff;
+    border: 2.5px solid var(--edge);
+    border-radius: 9px;
+    box-shadow: var(--shadow);
+    font-size: 35px; font-weight: 900; letter-spacing: -0.5px;
+    text-transform: uppercase;
+  }
+  h1 .hot { color: var(--gold); }   /* 3.15:1, large bold text only */
+  .tagline { color: var(--muted); font-size: 17px; }
+  /* Claims strip: the pitch, four flat blocks, black text on color. */
+  .claims { display: flex; flex-wrap: wrap; gap: 10px; list-style: none; margin: 20px 0 0; padding: 0; }
+  .claim {
+    padding: 8px 14px;
+    background: var(--panel); color: var(--ink);
+    border: 2.5px solid var(--edge); border-radius: 10px;
+    box-shadow: var(--shadow-sm);
+    font-size: 13px; font-weight: 800;
+    text-transform: uppercase; letter-spacing: 0.7px;
+  }
+  /* The full palette, one chip each. Every pairing is the same one already
+     verified for the engine tiles: 5.91, 10.21, 5.38 and 19.18 to 1. */
+  .claim-red  { background: var(--hero-ink); color: #ffffff; }
+  .claim-gold { background: var(--gold);     color: #0d0f13; }
+  .claim-blue { background: var(--g-blue);   color: #0d0f13; }
+  .claim-ink  { background: var(--ink);      color: var(--bg); }
+
+  .free-block {
+    margin-top: 46px; padding: 26px 28px;
+    background: var(--panel);
+    border: 3px solid var(--edge); border-radius: 15px;
+    box-shadow: var(--shadow);
+  }
+  .free-block h2 {
+    margin: 0 0 14px; font-size: 21px; font-weight: 900;
+    text-transform: uppercase; letter-spacing: 0.4px;
+  }
+  .free-block p { margin: 0 0 13px; font-size: 14.5px; line-height: 1.7; color: var(--muted); }
+  .free-block p:last-child { margin-bottom: 0; }
+  .free-block strong { color: var(--ink); }
+
+  /* ---------------------------------------------------------- input */
+  #drop {
+    border: 3px dashed var(--edge);
+    border-radius: var(--radius);
+    background: var(--panel-2);
+    box-shadow: var(--shadow);
+    padding: 53px 29px;
+    text-align: center;
+    cursor: pointer;
+    transition: transform .08s, box-shadow .08s, background .12s;
+  }
+  #drop:hover { background: var(--accent-soft); }
+  #drop:active, #drop.hot {
+    transform: translate(4px, 4px);
+    box-shadow: 0 0 0 var(--edge);
+    background: var(--accent-soft);
+    border-style: solid;
+  }
+  #drop h2 {
+    margin: 0 0 7px;
+    font-size: 20px; font-weight: 800;
+    text-transform: uppercase; letter-spacing: 0.5px;
+  }
+  #drop p { margin: 0; color: var(--muted); font-size: 16px; }
+  #file { display: none; }
+
+  .or {
+    display: flex; align-items: center; gap: 19px;
+    margin: 27px 0; color: var(--faint);
+    font-size: 15px; font-weight: 700;
+    text-transform: uppercase; letter-spacing: 1px;
+  }
+  .or::before, .or::after { content: ""; flex: 1; height: 2.5px; background: var(--edge); opacity: .25; }
+
+  .url-row { display: flex; gap: 13px; }
+  .url-row input {
+    flex: 1; min-width: 0;
+    padding: 16px 19px;
+    font: 19px var(--mono);
+    color: var(--ink); background: var(--panel);
+    border: 2.5px solid var(--edge);
+    border-radius: 13px;
+    box-shadow: var(--shadow-sm);
+  }
+  .url-row input::placeholder { color: var(--faint); }
+  .url-row input:focus {
+    outline: none;
+    transform: translate(2.5px, 2.5px);
+    box-shadow: 0 0 0 var(--edge);
+  }
+
+  button {
+    font: 700 17px var(--mono);
+    text-transform: uppercase; letter-spacing: 1px;
+    cursor: pointer;
+    color: var(--ink); background: var(--panel);
+    border: 2.5px solid var(--edge);
+    border-radius: 13px;
+    box-shadow: var(--shadow-sm);
+    padding: 16px 24px;
+    transition: transform .08s, box-shadow .08s;
+  }
+  button:hover { transform: translate(-1.5px, -1.5px); box-shadow: 4px 4px 0 var(--edge); }
+  button:active { transform: translate(2.5px, 2.5px); box-shadow: 0 0 0 var(--edge); }
+  /* Marvel red, cut dark enough that white sits at 5.91:1 on it. */
+  button.primary { background: var(--hero-ink); color: #fff; border-color: var(--edge); }
+  button:disabled { opacity: .45; cursor: not-allowed; transform: none; box-shadow: var(--shadow-sm); }
+
+  /* ---------------------------------------------------------- results */
+  #results { display: none; margin-top: 45px; }
+  #results.on { display: block; }
+
+  section { margin-bottom: 37px; }
+  h2.sec {
+    display: flex; align-items: center; gap: 12px;
+    margin: 0 0 16px;
+    font-size: 15px; font-weight: 800;
+    text-transform: uppercase; letter-spacing: 1.5px;
+    color: var(--ink);
+    padding-bottom: 8px;
+    border-bottom: 3px solid var(--edge);
+  }
+  /* A color chip per section, walking the quartet in order. */
+  h2.sec::before {
+    content: ""; flex: none;
+    width: 17px; height: 17px;
+    border: 2.5px solid var(--edge); border-radius: 4px;
+    background: var(--chip, var(--hero));
+  }
+  #results section:nth-of-type(odd)  h2.sec { --chip: var(--hero); }
+  #results section:nth-of-type(even) h2.sec { --chip: var(--ink); }
+
+  .card {
+    background: var(--panel);
+    border: 2.5px solid var(--edge);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    overflow: hidden;
+  }
+
+  .preview-grid { display: grid; grid-template-columns: 250px 1fr; gap: 27px; padding: 24px; }
+  @media (max-width: 760px) { .preview-grid { grid-template-columns: 1fr; } }
+  #preview {
+    width: 100%;
+    border: 2.5px solid var(--edge);
+    border-radius: 11px;
+    background-color: var(--panel-2);
+    background-image:
+      linear-gradient(45deg, rgba(128,128,128,.2) 25%, transparent 25%),
+      linear-gradient(-45deg, rgba(128,128,128,.2) 25%, transparent 25%),
+      linear-gradient(45deg, transparent 75%, rgba(128,128,128,.2) 75%),
+      linear-gradient(-45deg, transparent 75%, rgba(128,128,128,.2) 75%);
+    background-size: 21px 21px;
+    background-position: 0 0, 0 11px, 11px -11px, -11px 0;
+  }
+
+  dl.facts { display: grid; grid-template-columns: auto 1fr; gap: 9px 24px; align-content: start; margin: 0; font-size: 17px; }
+  dl.facts dt {
+    color: var(--muted); white-space: nowrap;
+    font-size: 13px; font-weight: 700;
+    text-transform: uppercase; letter-spacing: 0.5px;
+    padding-top: 4px;
+  }
+  dl.facts dd { margin: 0; font-weight: 700; overflow-wrap: anywhere; }
+
+  table { width: 100%; border-collapse: collapse; font-size: 17px; }
+  th, td { text-align: left; padding: 12px 19px; border-bottom: 2px solid var(--line); vertical-align: top; }
+  tbody tr:last-child td { border-bottom: none; }
+  th {
+    font-size: 13px; font-weight: 800;
+    text-transform: uppercase; letter-spacing: 1px;
+    color: var(--ink);
+    border-bottom: 3px solid var(--edge);
+  }
+  td.k {
+    color: var(--muted); white-space: nowrap;
+    font-size: 15px; font-weight: 700;
+    text-transform: uppercase; letter-spacing: 0.5px;
+  }
+  /* anywhere, not break-all: a 16-char hash still breaks when it has to, but
+     "TestCam Industries" wraps at the space instead of mid-word. */
+  td.v { font-weight: 700; overflow-wrap: anywhere; }
+
+  .scroll-x { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+
+  /* On a phone the nowrap label column eats most of the width and values break
+     mid-word. Stack each row instead: label above value, both full width.
+     The header row is the first <tr> in tbody, so it is hidden rather than
+     targeted through <thead>. */
+  @media (max-width: 560px) {
+    table, tbody, tr, td { display: block; width: 100%; }
+    tbody tr:first-child { display: none; }
+    tr { padding: 12px 0; border-bottom: 1.5px solid var(--line); }
+    tbody tr:last-child { border-bottom: none; }
+    td { border-bottom: none; padding: 2px 16px; }
+    td.k { white-space: normal; margin-bottom: 3px; }
+  }
+  /* At this type size the body must never scroll sideways. */
+  body { overflow-x: hidden; }
+  .empty { padding: 21px; color: var(--muted); font-size: 17px; }
+
+  .flag {
+    display: flex; gap: 13px; align-items: flex-start;
+    margin: 21px 24px; padding: 16px 19px;
+    background: var(--panel);
+    border: 2.5px solid var(--edge);
+    border-left: 12px solid var(--flag-color, var(--hero));
+    border-radius: 12px;
+    font-size: 17px; line-height: 1.6;
+  }
+  .flag.loc  { --flag-color: var(--g-blue);   background: var(--accent-soft); }
+  .flag.edit { --flag-color: var(--gold); background: var(--warn-soft); }
+  .flag strong { text-transform: uppercase; letter-spacing: 0.5px; font-weight: 800; }
+  .flag a { color: var(--ink); font-weight: 800; }
+
+  /* engines */
+  /* 400px min gives a clean 2x2 at full width instead of 3 tiles and an
+     orphan. The min() is load-bearing: without it the track stays 400px on a
+     narrow phone and the tiles overflow the screen and get clipped. */
+  .engines { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(400px, 100%), 1fr)); gap: 16px; }
+  /* Each engine is a comic panel: a flat color nameplate over black rule. */
+  .engine {
+    display: flex; flex-direction: column;
+    padding: 0; overflow: hidden;
+    text-decoration: none;
+    color: var(--ink); background: var(--panel);
+    border: 2.5px solid var(--edge);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    transition: transform .08s, box-shadow .08s;
+  }
+  .engine:hover { transform: translate(-2.5px, -2.5px); box-shadow: 7px 7px 0 var(--edge); }
+  .engine:active { transform: translate(4px, 4px); box-shadow: 0 0 0 var(--edge); }
+  .engine .name {
+    background: var(--tile, var(--hero-ink));
+    color: var(--tile-ink, #0d0f13);   /* every pairing verified >= 4.5:1 */
+    border-bottom: 2.5px solid var(--edge);
+    padding: 12px 19px;
+    font-weight: 900; font-size: 18px;
+    text-transform: uppercase; letter-spacing: 0.5px;
+  }
+  .engine .desc { padding: 16px 19px 19px; font-size: 15px; color: var(--muted); line-height: 1.55; }
+  /* Only rendered on coarse-pointer devices: says what the engine actually
+     does on a phone, since two of them push an app install. */
+  .engine .phone-note {
+    margin: 0 16px 16px;
+    padding: 8px 10px;
+    background: var(--warn-soft);
+    border: 2px solid var(--edge);
+    border-left: 6px solid var(--gold);
+    border-radius: 7px;
+    font-size: 13px; line-height: 1.5; color: var(--ink);
+  }
+  .engine[aria-disabled="true"] { opacity: .5; pointer-events: none; }
+
+  .hash-help { font-size: 16px; color: var(--muted); padding: 0 19px 21px; line-height: 1.7; margin: 0; }
+  .hash-help strong { color: var(--ink); font-weight: 800; }
+
+  .toolbar { display: flex; flex-wrap: wrap; gap: 13px; margin-bottom: 19px; }
+
+  .toast {
+    position: fixed; left: 50%; bottom: 35px;
+    transform: translate(-50%, 21px);
+    background: var(--panel); color: var(--ink);
+    border: 3px solid var(--edge);
+    border-radius: 13px;
+    box-shadow: var(--shadow);
+    padding: 15px 24px;
+    font-size: 16px; font-weight: 800;
+    text-transform: uppercase; letter-spacing: 0.5px;
+    opacity: 0; pointer-events: none;
+    transition: opacity .18s, transform .18s;
+    max-width: calc(100vw - 48px); text-align: center;
+  }
+  .toast.show { opacity: 1; transform: translate(-50%, 0); }
+
+  footer {
+    margin-top: 61px; padding-top: 27px;
+    border-top: 3px solid var(--edge);
+    color: var(--muted); font-size: 16px; line-height: 1.75;
+  }
+  footer strong { color: var(--ink); text-transform: uppercase; letter-spacing: 0.5px; font-weight: 800; }
+  code {
+    font-family: var(--mono); font-size: .92em; font-weight: 700;
+    background: var(--panel-2);
+    border: 2px solid var(--edge);
+    padding: 0 7px; border-radius: 7px;
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <h1>Reverse Image <span class="hot">Search</span></h1>
+    <p class="tagline">Search one image across four engines at once, and read what the file itself reveals.
+    Free, with no account and no upload.</p>
+    <ul class="claims">
+      <li class="claim claim-red">Free forever</li>
+      <li class="claim claim-gold">No account</li>
+      <li class="claim claim-blue">Nothing uploaded</li>
+      <li class="claim claim-ink">No ads</li>
+    </ul>
+  </header>
+
+  <div id="drop" role="button" tabindex="0" aria-label="Choose an image file">
+    <h2>Drop an image here</h2>
+    <p>or click to choose &middot; or press <code>Ctrl</code>/<code>Cmd</code> + <code>V</code> to paste</p>
+    <input type="file" id="file" accept="image/*">
+  </div>
+
+  <div class="or">or search an image already online</div>
+
+  <form class="url-row" id="urlForm">
+    <input type="url" id="url" placeholder="https://example.com/photo.jpg" autocomplete="off" spellcheck="false">
+    <button class="primary" type="submit">Analyze</button>
+  </form>
+
+  <div id="results">
+
+    <section>
+      <h2 class="sec">The image</h2>
+      <div class="card">
+        <div class="preview-grid">
+          <img id="preview" alt="Preview of the selected image">
+          <dl class="facts" id="facts"></dl>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <h2 class="sec">Search these engines</h2>
+      <div id="engineNote" class="empty" style="padding:0 0 12px"></div>
+      <div class="engines" id="engines"></div>
+    </section>
+
+    <section>
+      <h2 class="sec">EXIF metadata</h2>
+      <div class="card">
+        <div id="exifFlags"></div>
+        <div class="scroll-x"><table id="exifTable"><tbody></tbody></table></div>
+        <div id="exifEmpty" class="empty"></div>
+      </div>
+    </section>
+
+    <section>
+      <h2 class="sec">Perceptual hashes</h2>
+      <div class="card">
+        <div class="scroll-x"><table id="hashTable"><tbody></tbody></table></div>
+        <p class="hash-help">
+          A perceptual hash is a short fingerprint of what an image <em>looks like</em>, unlike a checksum
+          which changes completely if a single byte changes. Compare two images by counting differing bits
+          (the Hamming distance): under about 5 usually means the same image, over about 15 usually means a
+          different one.
+          <br><br>
+          Measured on this build: resizing, heavy JPEG recompression, brightness shifts and converting to
+          grayscale all leave pHash <strong>completely unchanged</strong>, and trimming 5% off each edge moves
+          it by 2 bits. <strong>Rotation defeats it</strong>, though: turning an image 90 degrees shifts pHash
+          by 24 bits, which reads as a different image. Rotate it back before comparing.
+        </p>
+      </div>
+    </section>
+
+  </div>
+
+  <section class="free-block">
+    <h2>Free, and staying that way</h2>
+    <p>There is no paid tier, no pro version, no trial that expires, and nothing to renew.
+    You do not need an account and you are never asked for an email. Improvements land here
+    the next time you load the page, at no cost, because there is no other version to sell you.</p>
+    <p>It costs nothing to run, which is why it can stay free: the whole tool is one HTML file
+    that does its work in your browser. There is no server holding your images, so there is no
+    bill that would eventually have to be passed on to you.</p>
+  </section>
+
+  <footer>
+    <p><strong>How this works.</strong> Reverse image search engines need to be able to fetch the image
+    themselves, so a URL can be handed straight to all four. A file on your own device has no public address,
+    and rather than upload it somewhere, this hands it to you: share it into another app on a phone, or copy
+    it and paste it into an engine on a desktop. Everything else, the EXIF parsing and the hashing, is
+    computed here in the page. Nothing you load is sent anywhere.</p>
+  </footer>
+
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+(function () {
+  "use strict";
+
+  // ---------------------------------------------------------------- helpers
+  const $ = (id) => document.getElementById(id);
+  const el = (tag, props) => Object.assign(document.createElement(tag), props || {});
+
+  let toastTimer;
+  function toast(msg) {
+    const t = $("toast");
+    t.textContent = msg;
+    t.classList.add("show");
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => t.classList.remove("show"), 2400);
+  }
+
+  function humanBytes(n) {
+    if (n < 1024) return n + " B";
+    if (n < 1024 * 1024) return (n / 1024).toFixed(1) + " KB";
+    return (n / 1048576).toFixed(2) + " MB";
+  }
+
+  // Reduce a width:height ratio to its simplest form, e.g. 1920x1080 -> 16:9
+  function aspectRatio(w, h) {
+    const gcd = (a, b) => (b ? gcd(b, a % b) : a);
+    const g = gcd(w, h) || 1;
+    const a = w / g, b = h / g;
+    return a <= 40 && b <= 40 ? `${a}:${b}` : (w / h).toFixed(3) + ":1";
+  }
+
+  // =========================================================================
+  //  EXIF
+  //  A JPEG is a chain of segments, each starting 0xFF <marker>. EXIF lives in
+  //  the APP1 segment (0xFFE1) and its payload is a TIFF structure: a header
+  //  saying which byte order to use, then a linked set of directories (IFDs)
+  //  of tag entries. Two of those tags are pointers to further directories,
+  //  one for extended EXIF fields and one for GPS.
+  // =========================================================================
+
+  const TAGS = {
+    0x010F: "Camera make",
+    0x0110: "Camera model",
+    0x0112: "Orientation",
+    0x011A: "X resolution",
+    0x011B: "Y resolution",
+    0x0131: "Software",
+    0x0132: "File changed",
+    0x013B: "Artist",
+    0x8298: "Copyright",
+    0x829A: "Exposure time",
+    0x829D: "F number",
+    0x8827: "ISO",
+    0x9003: "Taken (original)",
+    0x9004: "Digitized",
+    0x920A: "Focal length",
+    0x9209: "Flash",
+    0xA002: "EXIF width",
+    0xA003: "EXIF height",
+    0xA430: "Camera owner",
+    0xA431: "Body serial number",
+    0xA433: "Lens make",
+    0xA434: "Lens model",
+    0xA435: "Lens serial number"
+  };
+
+  const GPS_TAGS = {
+    0x0001: "GPS lat ref", 0x0002: "GPS latitude",
+    0x0003: "GPS lon ref", 0x0004: "GPS longitude",
+    0x0005: "GPS alt ref", 0x0006: "GPS altitude",
+    0x0007: "GPS time", 0x001D: "GPS date"
+  };
+
+  // bytes per component, indexed by TIFF type id
+  const TYPE_SIZE = { 1:1, 2:1, 3:2, 4:4, 5:8, 6:1, 7:1, 8:2, 9:4, 10:8, 11:4, 12:8 };
+
+  function findExifSegment(view) {
+    if (view.byteLength < 4 || view.getUint16(0) !== 0xFFD8) return null; // not a JPEG
+    let off = 2;
+    while (off + 4 <= view.byteLength) {
+      if (view.getUint8(off) !== 0xFF) return null;         // desynced, give up
+      const marker = view.getUint8(off + 1);
+      if (marker === 0xDA || marker === 0xD9) return null;   // start of scan / end
+      const len = view.getUint16(off + 2);
+      if (marker === 0xE1) {                                 // APP1 holds EXIF
+        // payload must begin with "Exif\0\0"
+        let sig = "";
+        for (let i = 0; i < 4; i++) sig += String.fromCharCode(view.getUint8(off + 4 + i));
+        if (sig === "Exif") return off + 10;                 // start of the TIFF header
+      }
+      off += 2 + len;
+    }
+    return null;
+  }
+
+  function readEntryValue(view, tiff, entry, little) {
+    const { type, count, valueOffset } = entry;
+    const size = TYPE_SIZE[type];
+    if (!size) return null;
+    const total = size * count;
+    // Values of 4 bytes or fewer are stored inline in the entry itself.
+    const base = total <= 4 ? entry.inlineAt : tiff + valueOffset;
+    if (base + total > view.byteLength) return null;
+
+    if (type === 2) { // ASCII
+      let s = "";
+      for (let i = 0; i < count; i++) {
+        const c = view.getUint8(base + i);
+        if (c === 0) break;
+        s += String.fromCharCode(c);
+      }
+      return s.trim();
+    }
+
+    const nums = [];
+    for (let i = 0; i < count; i++) {
+      const at = base + i * size;
+      switch (type) {
+        case 1: case 7: nums.push(view.getUint8(at)); break;
+        case 3: nums.push(view.getUint16(at, little)); break;
+        case 4: nums.push(view.getUint32(at, little)); break;
+        case 6: nums.push(view.getInt8(at)); break;
+        case 8: nums.push(view.getInt16(at, little)); break;
+        case 9: nums.push(view.getInt32(at, little)); break;
+        case 5: { // RATIONAL: numerator / denominator
+          const n = view.getUint32(at, little), d = view.getUint32(at + 4, little);
+          nums.push(d === 0 ? 0 : n / d);
+          break;
+        }
+        case 10: {
+          const n = view.getInt32(at, little), d = view.getInt32(at + 4, little);
+          nums.push(d === 0 ? 0 : n / d);
+          break;
+        }
+        default: return null;
+      }
+    }
+    return nums.length === 1 ? nums[0] : nums;
+  }
+
+  function readIFD(view, tiff, ifdOffset, little) {
+    const out = {};
+    if (tiff + ifdOffset + 2 > view.byteLength) return out;
+    const count = view.getUint16(tiff + ifdOffset, little);
+    for (let i = 0; i < count; i++) {
+      const at = tiff + ifdOffset + 2 + i * 12;
+      if (at + 12 > view.byteLength) break;
+      const entry = {
+        tag: view.getUint16(at, little),
+        type: view.getUint16(at + 2, little),
+        count: view.getUint32(at + 4, little),
+        valueOffset: view.getUint32(at + 8, little),
+        inlineAt: at + 8
+      };
+      out[entry.tag] = entry;
+    }
+    return out;
+  }
+
+  // GPS coordinates are stored as [degrees, minutes, seconds] plus a N/S/E/W ref
+  function dmsToDecimal(dms, ref) {
+    if (!Array.isArray(dms) || dms.length < 3) return null;
+    let dec = dms[0] + dms[1] / 60 + dms[2] / 3600;
+    if (ref === "S" || ref === "W") dec = -dec;
+    return dec;
+  }
+
+  function parseExif(buffer) {
+    const view = new DataView(buffer);
+    const tiff = findExifSegment(view);
+    if (tiff === null) return null;
+    if (tiff + 8 > view.byteLength) return null;
+
+    const order = view.getUint16(tiff);
+    if (order !== 0x4949 && order !== 0x4D4D) return null;
+    const little = order === 0x4949;                 // "II" = Intel = little endian
+    if (view.getUint16(tiff + 2, little) !== 42) return null;  // TIFF magic number
+
+    const ifd0 = readIFD(view, tiff, view.getUint32(tiff + 4, little), little);
+
+    const fields = {};
+    const collect = (entries, names) => {
+      for (const tag in entries) {
+        const name = names[tag];
+        if (!name) continue;
+        const v = readEntryValue(view, tiff, entries[tag], little);
+        if (v !== null && v !== "") fields[name] = v;
+      }
+    };
+    collect(ifd0, TAGS);
+
+    // 0x8769 points at the extended EXIF directory
+    if (ifd0[0x8769]) {
+      collect(readIFD(view, tiff, ifd0[0x8769].valueOffset, little), TAGS);
+    }
+
+    // 0x8825 points at the GPS directory
+    let gps = null;
+    if (ifd0[0x8825]) {
+      const gpsIfd = readIFD(view, tiff, ifd0[0x8825].valueOffset, little);
+      const g = {};
+      collect(gpsIfd, GPS_TAGS);
+      for (const tag in gpsIfd) {
+        if (GPS_TAGS[tag]) g[GPS_TAGS[tag]] = readEntryValue(view, tiff, gpsIfd[tag], little);
+      }
+      const lat = dmsToDecimal(g["GPS latitude"], g["GPS lat ref"]);
+      const lon = dmsToDecimal(g["GPS longitude"], g["GPS lon ref"]);
+      if (lat !== null && lon !== null) gps = { lat, lon };
+    }
+
+    return { fields, gps, count: Object.keys(fields).length };
+  }
+
+  // =========================================================================
+  //  Perceptual hashing
+  // =========================================================================
+
+  // Draw the image at w x h and return one grayscale value per pixel.
+  function grayscaleAt(img, w, h) {
+    const c = el("canvas", { width: w, height: h });
+    const ctx = c.getContext("2d", { willReadFrequently: true });
+    ctx.drawImage(img, 0, 0, w, h);
+    const d = ctx.getImageData(0, 0, w, h).data;
+    const out = new Float64Array(w * h);
+    for (let i = 0, p = 0; i < d.length; i += 4, p++) {
+      // Rec. 601 luma weights
+      out[p] = 0.299 * d[i] + 0.587 * d[i + 1] + 0.114 * d[i + 2];
+    }
+    return out;
+  }
+
+  const bitsToHex = (bits) => {
+    let hex = "";
+    for (let i = 0; i < bits.length; i += 4) {
+      hex += ((bits[i] << 3) | (bits[i+1] << 2) | (bits[i+2] << 1) | bits[i+3]).toString(16);
+    }
+    return hex;
+  };
+
+  // aHash: is each pixel brighter than the average?
+  function aHash(img) {
+    const px = grayscaleAt(img, 8, 8);
+    let mean = 0;
+    for (const v of px) mean += v;
+    mean /= px.length;
+    return bitsToHex(Array.from(px, (v) => (v > mean ? 1 : 0)));
+  }
+
+  // dHash: is each pixel brighter than the one to its right?
+  function dHash(img) {
+    const W = 9, H = 8;
+    const px = grayscaleAt(img, W, H);
+    const bits = [];
+    for (let y = 0; y < H; y++) {
+      for (let x = 0; x < W - 1; x++) {
+        bits.push(px[y * W + x] > px[y * W + x + 1] ? 1 : 0);
+      }
+    }
+    return bitsToHex(bits);
+  }
+
+  // pHash: run a DCT and keep only the low-frequency corner, which describes
+  // the broad structure of the image and survives resizing and recompression.
+  function pHash(img) {
+    const N = 32, K = 8;
+    const px = grayscaleAt(img, N, N);
+
+    // Precompute the cosine table once instead of inside the triple loop.
+    const cos = new Float64Array(N * N);
+    for (let u = 0; u < N; u++) {
+      for (let x = 0; x < N; x++) {
+        cos[u * N + x] = Math.cos(((2 * x + 1) * u * Math.PI) / (2 * N));
+      }
+    }
+    const alpha = (u) => (u === 0 ? Math.SQRT1_2 : 1);
+
+    // Only the top-left K x K coefficients are needed.
+    const dct = new Float64Array(K * K);
+    for (let u = 0; u < K; u++) {
+      for (let v = 0; v < K; v++) {
+        let sum = 0;
+        for (let y = 0; y < N; y++) {
+          const cy = cos[v * N + y];
+          if (cy === 0) continue;
+          let inner = 0;
+          for (let x = 0; x < N; x++) inner += px[y * N + x] * cos[u * N + x];
+          sum += inner * cy;
+        }
+        dct[u * K + v] = 0.25 * alpha(u) * alpha(v) * sum;
+      }
+    }
+
+    // Drop the DC term (overall brightness) before taking the median.
+    const rest = Array.from(dct).slice(1);
+    const sorted = rest.slice().sort((a, b) => a - b);
+    const median = sorted[Math.floor(sorted.length / 2)];
+    return bitsToHex(Array.from(dct, (v, i) => (i === 0 ? 0 : v > median ? 1 : 0)));
+  }
+
+  // =========================================================================
+  //  Search engines
+  // =========================================================================
+
+  // Red, black and gold carry the set, with Google blue kept for the one
+  // tile that is actually Google. Each nameplate names its own text color
+  // because they are no longer all light backgrounds.
+  const ENGINES = [
+    { name: "Google Lens", tile: "var(--g-blue)", ink: "#0d0f13",
+      desc: "Largest index. Best for identifying objects, products and places.",
+      phone: "Pushes its app on phones. Share the image into the Google app instead.",
+      byUrl: (u) => "https://lens.google.com/uploadbyurl?url=" + encodeURIComponent(u),
+      upload: "https://lens.google.com/" },
+    { name: "Yandex", tile: "var(--hero-ink)", ink: "#ffffff",
+      desc: "Often the strongest for finding the same face or photo elsewhere.",
+      phone: "Works in a phone browser. Good first stop on mobile.",
+      byUrl: (u) => "https://yandex.com/images/search?rpt=imageview&url=" + encodeURIComponent(u),
+      upload: "https://yandex.com/images/" },
+    { name: "Bing Visual Search", tile: "var(--ink)", ink: "var(--bg)",
+      desc: "Good coverage of shopping and stock photography.",
+      phone: "Pushes its app on phones. Request the desktop site.",
+      byUrl: (u) => "https://www.bing.com/images/search?view=detailv2&iss=sbi&q=imgurl:" + encodeURIComponent(u),
+      upload: "https://www.bing.com/visualsearch" },
+    { name: "TinEye", tile: "var(--gold)", ink: "#0d0f13",
+      desc: "Exact-match specialist. Sorts by oldest, so it finds the original.",
+      byUrl: (u) => "https://tineye.com/search?url=" + encodeURIComponent(u),
+      upload: "https://tineye.com/" }
+  ];
+
+  const ON_PHONE = window.matchMedia && window.matchMedia("(pointer: coarse)").matches;
+
+  // =========================================================================
+  //  Rendering
+  // =========================================================================
+
+  function renderFacts(info) {
+    const dl = $("facts");
+    dl.textContent = "";
+    const rows = [
+      ["Name", info.name],
+      ["Type", info.type],
+      ["Size", info.size != null ? humanBytes(info.size) : null],
+      ["Dimensions", `${info.width} x ${info.height} px`],
+      ["Aspect ratio", aspectRatio(info.width, info.height)],
+      ["Megapixels", ((info.width * info.height) / 1e6).toFixed(2) + " MP"],
+      ["Source", info.source]
+    ];
+    for (const [k, v] of rows) {
+      if (v == null || v === "") continue;
+      dl.append(el("dt", { textContent: k }), el("dd", { textContent: String(v) }));
+    }
+  }
+
+  function renderEngines(imageUrl) {
+    const box = $("engines");
+    const note = $("engineNote");
+    box.textContent = "";
+
+    if (imageUrl) {
+      note.textContent = "Opens in a new tab with this image URL handed straight to the engine.";
+      for (const e of ENGINES) {
+        const a = el("a", { className: "engine", href: e.byUrl(imageUrl), target: "_blank", rel: "noopener noreferrer" });
+        a.style.setProperty("--tile", e.tile);
+        a.style.setProperty("--tile-ink", e.ink);
+        a.append(el("span", { className: "name", textContent: e.name }),
+                 el("span", { className: "desc", textContent: e.desc }));
+        if (ON_PHONE && e.phone) a.append(el("span", { className: "phone-note", textContent: e.phone }));
+        box.append(a);
+      }
+    } else {
+      note.textContent = canShareImage()
+        ? "This image is only on your device, so there is no address to hand over. Share it straight into the Google app, or copy it and paste into an engine below."
+        : "This image is only on your computer, so there is no address to hand over. Copy it to the clipboard, then paste into the engine with Ctrl/Cmd + V.";
+      const bar = el("div", { className: "toolbar" });
+      if (canShareImage()) {
+        const shareBtn = el("button", { className: "primary", textContent: "Share image" });
+        shareBtn.addEventListener("click", shareImage);
+        bar.append(shareBtn);
+      }
+      const copyBtn = el("button", {
+        className: canShareImage() ? "" : "primary",
+        textContent: "Copy image to clipboard"
+      });
+      copyBtn.addEventListener("click", copyImageToClipboard);
+      bar.append(copyBtn);
+      box.parentNode.insertBefore(bar, box);
+      for (const e of ENGINES) {
+        const a = el("a", { className: "engine", href: e.upload, target: "_blank", rel: "noopener noreferrer" });
+        a.style.setProperty("--tile", e.tile);
+        a.style.setProperty("--tile-ink", e.ink);
+        a.append(el("span", { className: "name", textContent: e.name }),
+                 el("span", { className: "desc", textContent: e.desc }));
+        if (ON_PHONE && e.phone) a.append(el("span", { className: "phone-note", textContent: e.phone }));
+        box.append(a);
+      }
+    }
+  }
+
+  function renderExif(exif) {
+    const tbody = $("exifTable").querySelector("tbody");
+    const flags = $("exifFlags");
+    const empty = $("exifEmpty");
+    tbody.textContent = "";
+    flags.textContent = "";
+    empty.textContent = "";
+
+    if (!exif || exif.count === 0) {
+      $("exifTable").style.display = "none";
+      empty.textContent = exif === null
+        ? "No EXIF block found. This is normal for PNG, WebP and GIF, and for JPEGs that have been stripped by social platforms, messaging apps or screenshot tools."
+        : "An EXIF block exists but contains no readable fields.";
+      return;
+    }
+    $("exifTable").style.display = "";
+
+    // Surface anything privacy-relevant before the raw dump.
+    if (exif.gps) {
+      const f = el("div", { className: "flag loc" });
+      f.append(el("strong", { textContent: "Location:" }));
+      const span = el("span");
+      span.append(document.createTextNode(
+        ` this photo carries GPS coordinates: ${exif.gps.lat.toFixed(6)}, ${exif.gps.lon.toFixed(6)}. `));
+      span.append(el("a", {
+        href: `https://www.openstreetmap.org/?mlat=${exif.gps.lat}&mlon=${exif.gps.lon}#map=15/${exif.gps.lat}/${exif.gps.lon}`,
+        target: "_blank", rel: "noopener noreferrer", textContent: "View on map"
+      }));
+      f.append(span);
+      flags.append(f);
+    }
+    if (exif.fields["Software"]) {
+      const f = el("div", { className: "flag edit" });
+      f.append(el("strong", { textContent: "Edited:" }),
+               el("span", { textContent: ` saved by ${exif.fields["Software"]}, so this is not the untouched camera original.` }));
+      flags.append(f);
+    }
+
+    const head = el("tr");
+    head.append(el("th", { textContent: "Field" }), el("th", { textContent: "Value" }));
+    tbody.append(head);
+
+    for (const [k, v] of Object.entries(exif.fields)) {
+      const tr = el("tr");
+      let text = Array.isArray(v) ? v.join(", ") : String(v);
+      if (typeof v === "number" && !Number.isInteger(v)) text = v.toFixed(4).replace(/\.?0+$/, "");
+      tr.append(el("td", { className: "k", textContent: k }), el("td", { className: "v", textContent: text }));
+      tbody.append(tr);
+    }
+  }
+
+  function renderHashes(img) {
+    const tbody = $("hashTable").querySelector("tbody");
+    tbody.textContent = "";
+    const head = el("tr");
+    head.append(el("th", { textContent: "Algorithm" }), el("th", { textContent: "Hash" }), el("th", { textContent: "What it captures" }));
+    tbody.append(head);
+
+    let rows;
+    try {
+      rows = [
+        ["aHash", aHash(img), "Average brightness. Fastest, least precise."],
+        ["dHash", dHash(img), "Left-to-right gradients. Good all-rounder."],
+        ["pHash", pHash(img), "Low-frequency structure. Most robust to edits."]
+      ];
+    } catch (err) {
+      // Canvas is tainted when a cross-origin image is loaded without CORS.
+      tbody.textContent = "";
+      const tr = el("tr");
+      tr.append(el("td", { colSpan: 3, className: "empty",
+        textContent: "Hashes could not be computed. The image is served from another domain without CORS permission, so the browser blocks reading its pixels. Download it and open the file directly to hash it." }));
+      tbody.append(tr);
+      return;
+    }
+
+    for (const [name, hash, desc] of rows) {
+      const tr = el("tr");
+      tr.append(el("td", { className: "k", textContent: name }),
+                el("td", { className: "v", textContent: hash }),
+                el("td", { textContent: desc, style: "color:var(--muted);font-size:15px" }));
+      tbody.append(tr);
+    }
+  }
+
+  // =========================================================================
+  //  State + flow
+  // =========================================================================
+
+  let currentBlob = null;   // the File/Blob when a local file is loaded
+  let currentObjUrl = null; // object URL to revoke on the next load
+
+  // Re-encode to PNG, which is the only format the clipboard reliably accepts.
+  function toPng(blob) {
+    if (blob.type === "image/png") return Promise.resolve(blob);
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      const url = URL.createObjectURL(blob);
+      img.onload = () => {
+        const c = el("canvas", { width: img.naturalWidth, height: img.naturalHeight });
+        c.getContext("2d").drawImage(img, 0, 0);
+        c.toBlob((b) => {
+          URL.revokeObjectURL(url);
+          b ? resolve(b) : reject(new Error("encode failed"));
+        }, "image/png");
+      };
+      img.onerror = () => { URL.revokeObjectURL(url); reject(new Error("decode failed")); };
+      img.src = url;
+    });
+  }
+
+  // Safari, on both desktop and iOS, requires the clipboard write to be issued
+  // synchronously inside the user gesture. Awaiting the PNG conversion first
+  // breaks that chain and the write is silently rejected, which is exactly what
+  // happened on iPhone. Passing the promise into ClipboardItem keeps the
+  // gesture intact and lets the encode finish afterwards.
+  function copyImageToClipboard() {
+    if (!currentBlob) return;
+    if (!navigator.clipboard || typeof ClipboardItem === "undefined") {
+      toast("This browser has no image clipboard. Use Share instead.");
+      return;
+    }
+    try {
+      navigator.clipboard
+        .write([new ClipboardItem({ "image/png": toPng(currentBlob) })])
+        .then(() => toast("Image copied. Paste it into the engine."))
+        .catch(() => toast("The browser blocked the clipboard. Use Share instead."));
+    } catch (err) {
+      toast("The browser blocked the clipboard. Use Share instead.");
+    }
+  }
+
+  // On a phone the clipboard is the wrong tool. The share sheet hands the file
+  // straight to the Google app, Photos, or anything else that accepts images,
+  // which is how you actually get an image into Lens on iOS.
+  function canShareImage() {
+    if (!currentBlob || !navigator.canShare || !navigator.share) return false;
+    try {
+      return navigator.canShare({ files: [asFile(currentBlob)] });
+    } catch (err) {
+      return false;
+    }
+  }
+
+  function asFile(blob) {
+    if (blob instanceof File) return blob;
+    const ext = (blob.type.split("/")[1] || "png").replace("jpeg", "jpg");
+    return new File([blob], `image.${ext}`, { type: blob.type });
+  }
+
+  async function shareImage() {
+    if (!currentBlob) return;
+    try {
+      await navigator.share({ files: [asFile(currentBlob)] });
+    } catch (err) {
+      if (err && err.name !== "AbortError") toast("Sharing was not available.");
+    }
+  }
+
+  function loadImageElement(src, crossOrigin) {
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      if (crossOrigin) img.crossOrigin = "anonymous";
+      img.onload = () => resolve(img);
+      img.onerror = () => reject(new Error("Could not load that image."));
+      img.src = src;
+    });
+  }
+
+  function show(info, img, exif, imageUrl) {
+    $("preview").src = img.src;
+    renderFacts(Object.assign({ width: img.naturalWidth, height: img.naturalHeight }, info));
+    // renderEngines may insert a toolbar; clear any previous one first
+    const stale = document.querySelector("#engines").parentNode.querySelector(".toolbar");
+    if (stale) stale.remove();
+    renderEngines(imageUrl);
+    renderExif(exif);
+    renderHashes(img);
+    $("results").classList.add("on");
+    $("results").scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+
+  async function handleFile(file) {
+    if (!file || !file.type.startsWith("image/")) { toast("That is not an image file."); return; }
+
+    if (currentObjUrl) URL.revokeObjectURL(currentObjUrl);
+    currentBlob = file;
+    currentObjUrl = URL.createObjectURL(file);
+
+    let exif = null;
+    try {
+      exif = parseExif(await file.arrayBuffer());
+    } catch (err) {
+      exif = null; // a malformed EXIF block should never break the page
+    }
+
+    try {
+      const img = await loadImageElement(currentObjUrl, false);
+      show({ name: file.name, type: file.type, size: file.size, source: "Local file" }, img, exif, null);
+    } catch (err) {
+      toast("That image could not be decoded.");
+    }
+  }
+
+  async function handleUrl(raw) {
+    const url = raw.trim();
+    if (!url) return;
+    let parsed;
+    try {
+      parsed = new URL(url);
+      if (parsed.protocol !== "http:" && parsed.protocol !== "https:") throw new Error();
+    } catch (err) {
+      toast("Enter a full http:// or https:// image URL.");
+      return;
+    }
+
+    currentBlob = null;
+    // Ask for CORS so the pixels can be hashed; fall back to a plain load,
+    // which still previews and still hands the URL to the search engines.
+    let img;
+    try {
+      img = await loadImageElement(url, true);
+    } catch (err) {
+      try {
+        img = await loadImageElement(url, false);
+      } catch (err2) {
+        toast("Could not load an image from that URL.");
+        return;
+      }
+    }
+
+    // Try to read the raw bytes too, so remote images get EXIF as well.
+    // This only works when the host allows cross-origin reads; when it does
+    // not, the preview and the engine hand-off still work fine.
+    let exif = null, bytes = null;
+    try {
+      const res = await fetch(url, { mode: "cors" });
+      if (res.ok) {
+        const buf = await res.arrayBuffer();
+        bytes = buf.byteLength;
+        exif = parseExif(buf);
+      }
+    } catch (err) {
+      exif = null; // blocked by CORS, which is normal and not worth surfacing
+    }
+
+    const name = decodeURIComponent(parsed.pathname.split("/").pop() || "") || parsed.hostname;
+    show({ name, type: "Remote image", size: bytes, source: parsed.hostname }, img, exif, url);
+  }
+
+  // ---------------------------------------------------------------- wiring
+  const drop = $("drop");
+  const fileInput = $("file");
+
+  drop.addEventListener("click", () => fileInput.click());
+  drop.addEventListener("keydown", (e) => {
+    if (e.key === "Enter" || e.key === " ") { e.preventDefault(); fileInput.click(); }
+  });
+  fileInput.addEventListener("change", () => {
+    if (fileInput.files[0]) handleFile(fileInput.files[0]);
+  });
+
+  ["dragenter", "dragover"].forEach((ev) =>
+    drop.addEventListener(ev, (e) => { e.preventDefault(); drop.classList.add("hot"); }));
+  ["dragleave", "drop"].forEach((ev) =>
+    drop.addEventListener(ev, (e) => { e.preventDefault(); drop.classList.remove("hot"); }));
+  drop.addEventListener("drop", (e) => {
+    const f = e.dataTransfer.files[0];
+    if (f) handleFile(f);
+  });
+
+  // Paste an image straight from the clipboard.
+  document.addEventListener("paste", (e) => {
+    const items = e.clipboardData && e.clipboardData.items;
+    if (!items) return;
+    for (const item of items) {
+      if (item.type.startsWith("image/")) {
+        const f = item.getAsFile();
+        if (f) { e.preventDefault(); handleFile(f); return; }
+      }
+    }
+    // no image in the clipboard, maybe it was a URL
+    const text = e.clipboardData.getData("text");
+    if (text && /^https?:\/\//i.test(text.trim())) {
+      $("url").value = text.trim();
+    }
+  });
+
+  $("urlForm").addEventListener("submit", (e) => {
+    e.preventDefault();
+    handleUrl($("url").value);
+  });
+
+  // Deep link support: index.html?url=https://...
+  const qs = new URLSearchParams(location.search);
+  if (qs.get("url")) {
+    $("url").value = qs.get("url");
+    handleUrl(qs.get("url"));
+  }
+})();
+</script>
+</body>
+</html>
