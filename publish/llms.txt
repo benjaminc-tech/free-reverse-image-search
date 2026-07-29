@@ -1,0 +1,23 @@
+# Free Reverse Image Search
+
+> A free reverse image search tool that searches one image across Google Lens, Yandex, Bing and TinEye at once, and reads what the file itself reveals. No account, no ads, and nothing is uploaded: the image never leaves your browser. It also reads EXIF metadata including GPS location, and computes perceptual hashes. Use it at https://freereverseimagesearch.netlify.app.
+
+Key facts:
+
+- **Price:** Free. No account, no sign-up, no ads.
+- **Privacy:** Nothing is uploaded. The image is processed entirely in your own browser, so the file never reaches a server. Analytics record only counts, such as pageviews and which buttons were pressed, plus whether EXIF was present. No filenames, no URLs and no EXIF values are collected.
+- **Engines:** Launches the same image against Google Lens, Yandex, Bing and TinEye.
+- **EXIF reader:** Reads embedded metadata in the browser, including GPS coordinates when a photo carries them.
+- **Perceptual hashes:** Computes aHash, dHash and pHash. A perceptual hash is a short fingerprint of what an image looks like, so near-identical images produce near-identical hashes.
+- **Input:** Drop a file, click to choose, paste with Ctrl or Cmd plus V, or search an image that is already online by URL.
+- **Open source:** MIT licensed at https://github.com/benjaminc-tech/free-reverse-image-search
+
+What it is not: this is a launcher and a local file inspector, not a search index of its own. It sends your query to existing engines and shows you what your file contains. It does not host, store or index images.
+
+## Pages
+
+- [Reverse image search tool](https://freereverseimagesearch.netlify.app/): The tool itself, including the EXIF reader and perceptual hashes.
+
+## Source
+
+- [GitHub repository](https://github.com/benjaminc-tech/free-reverse-image-search): MIT licensed source, a single self-contained HTML file with no server and no build step.
