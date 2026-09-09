@@ -8,8 +8,8 @@
 
 <!-- Favicon: Marvel red plate, white lens, gold handle. Inlined as a data URI
      so index.html stays a single self-contained file. Source: favicon.svg -->
-<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect x='3.5' y='3.5' width='93' height='93' rx='24' fill='%23EC1D24' stroke='%230d0f13' stroke-width='7'/><path d='M56 54 L79 77' stroke='%230d0f13' stroke-width='19' stroke-linecap='round'/><path d='M57 55 L77 75' stroke='%23F0B323' stroke-width='11' stroke-linecap='round'/><circle cx='42' cy='40' r='25' fill='%23ffffff' stroke='%230d0f13' stroke-width='7'/></svg>">
-<meta name="theme-color" content="#EC1D24">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect x='3.5' y='3.5' width='93' height='93' rx='24' fill='%230071e3' stroke='%23d2d2d7' stroke-width='7'/><path d='M56 54 L79 77' stroke='%23d2d2d7' stroke-width='19' stroke-linecap='round'/><path d='M57 55 L77 75' stroke='%23F0B323' stroke-width='11' stroke-linecap='round'/><circle cx='42' cy='40' r='25' fill='%23ffffff' stroke='%23d2d2d7' stroke-width='7'/></svg>">
+<meta name="theme-color" content="#0071e3">
 <link rel="canonical" href="https://freereverseimagesearch.netlify.app/">
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://freereverseimagesearch.netlify.app/">
@@ -101,52 +101,53 @@
   :root {
     --bg:      #ffffff;
     --panel:   #ffffff;
-    --panel-2: #f4f6f9;
-    --line:    #e4e7ec;
-    --ink:     #0d0f13;
-    --muted:   #4a505c;
-    --faint:   #878f9c;
-    --edge:    #0d0f13;
+    --panel-2: #f5f5f7;
+    --line:    #d2d2d7;
+    --ink:     #1d1d1f;
+    --muted:   #6e6e73;
+    --faint:   #86868b;
+    --edge:    #d2d2d7;
 
     /* Marvel: one hot red carried by heavy black inking.
        --hero is for flat blocks, --hero-ink is the darker cut that clears
        4.5:1 against white so button labels stay readable (5.91:1). */
-    --hero:     #EC1D24;
-    --hero-ink: #C7151C;
+    --hero:     #0071e3;
+    --hero-ink: #0077ed;
 
-    --hero-deep: #8F1014;
+    --hero-deep: #0058b0;
     --gold:      #F0B323;   /* comic gold, the other half of the Marvel pair */
 
     /* One Google color retained, for the one tile that is actually Google.
        The quartet is deliberately gone: red and black carry the design. */
-    --g-blue:   #4285F4;
+    --g-blue:   #0071e3;
 
     --accent:  var(--g-blue);
-    --accent-soft: #e3ecfd;
+    --accent-soft: #f0f6ff;
     --warn:    #b45309;
     --warn-soft: #fef6dd;
     --ok:      var(--hero);
-    --shadow:  4px 4px 0 var(--edge);
-    --shadow-sm: 2.5px 2.5px 0 var(--edge);
-    --radius:  19px;
-    --mono: "Monaco", "Menlo", ui-monospace, SFMono-Regular, "Courier New", monospace;
+    --shadow:  0 4px 16px rgba(0,0,0,.08);
+    --shadow-sm: 0 1px 3px rgba(0,0,0,.07);
+    --radius:  12px;
+    --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, monospace;
+    --ui: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, Roboto, "Helvetica Neue", Arial, sans-serif;
   }
 
   @media (prefers-color-scheme: dark) {
     :root {
-      --bg:      #0d0f13;
-      --panel:   #14181f;
-      --panel-2: #1b212b;
-      --line:    #2a323f;
-      --ink:     #f2f5f9;
-      --muted:   #a8b1bf;
-      --faint:   #7c8697;
-      --edge:    #f2f5f9;   /* the blackwork inverts: light rules on dark */
+      --bg:      #000000;
+      --panel:   #1d1d1f;
+      --panel-2: #2c2c2e;
+      --line:    #38383c;
+      --ink:     #f5f5f7;
+      --muted:   #a1a1a6;
+      --faint:   #86868b;
+      --edge:    #38383c;   /* the blackwork inverts: light rules on dark */
       /* The color blocks keep their exact hue in both themes, the way a
          printed comic panel does. Only the surfaces around them change. */
       --accent:  var(--g-blue);
       --accent-soft: #16243f;
-      --warn:    var(--gold);
+      --warn:    var(--panel-2);
       --warn-soft: #2e2510;
       --ok:      var(--hero);
     }
@@ -158,7 +159,8 @@
   body {
     background: var(--bg);
     color: var(--ink);
-    font: 20px/1.6 var(--mono);
+    font: 17px/1.47 var(--ui);
+    letter-spacing: -0.01em;
     -webkit-font-smoothing: antialiased;
   }
 
@@ -169,44 +171,43 @@
   /* The wordmark sits reversed out of a solid red plate, the way a comic
      masthead does. White on this red is 5.91:1. */
   h1 {
-    display: inline-block;
-    margin: 0 0 16px;
-    padding: 9px 17px;
-    background: var(--hero-ink); color: #fff;
-    border: 2.5px solid var(--edge);
-    border-radius: 9px;
-    box-shadow: var(--shadow);
-    font-size: 35px; font-weight: 900; letter-spacing: -0.5px;
-    text-transform: uppercase;
+    display: block;
+    margin: 0 0 14px;
+    padding: 0;
+    background: none; color: var(--ink);
+    border: 0;
+    box-shadow: none;
+    font-size: clamp(30px, 7.5vw, 48px); font-weight: 600; letter-spacing: -0.028em; line-height: 1.08;
+    text-transform: none;
   }
-  h1 .hot { color: var(--gold); }   /* 3.15:1, large bold text only */
+  h1 .hot { color: var(--faint); }   /* second half of the headline, deliberately quieter */
   .tagline { color: var(--muted); font-size: 17px; }
   /* Claims strip: the pitch, four flat blocks, black text on color. */
   .claims { display: flex; flex-wrap: wrap; gap: 10px; list-style: none; margin: 20px 0 0; padding: 0; }
   .claim {
     padding: 8px 14px;
     background: var(--panel); color: var(--ink);
-    border: 2.5px solid var(--edge); border-radius: 10px;
+    border: 1px solid var(--edge); border-radius: 10px;
     box-shadow: var(--shadow-sm);
-    font-size: 13px; font-weight: 800;
-    text-transform: uppercase; letter-spacing: 0.7px;
+    font-size: 13px; font-weight: 600;
+    text-transform: none; letter-spacing: -0.01em;
   }
   /* The full palette, one chip each. Every pairing is the same one already
      verified for the engine tiles: 5.91, 10.21, 5.38 and 19.18 to 1. */
   .claim-red  { background: var(--hero-ink); color: #ffffff; }
-  .claim-gold { background: var(--gold);     color: #0d0f13; }
+  .claim-gold { background: var(--panel-2);     color: var(--ink); border-color: var(--line); }
   .claim-blue { background: var(--g-blue);   color: #0d0f13; }
-  .claim-ink  { background: var(--ink);      color: var(--bg); }
+  .claim-ink  { background: var(--panel-2);  color: var(--ink); border-color: var(--line); }
 
   .free-block {
     margin-top: 46px; padding: 26px 28px;
     background: var(--panel);
-    border: 3px solid var(--edge); border-radius: 15px;
+    border: 1px solid var(--edge); border-radius: 15px;
     box-shadow: var(--shadow);
   }
   .free-block h2 {
-    margin: 0 0 14px; font-size: 21px; font-weight: 900;
-    text-transform: uppercase; letter-spacing: 0.4px;
+    margin: 0 0 14px; font-size: 21px; font-weight: 600;
+    text-transform: none; letter-spacing: -0.01em;
   }
   .free-block p { margin: 0 0 13px; font-size: 14.5px; line-height: 1.7; color: var(--muted); }
   .free-block p:last-child { margin-bottom: 0; }
@@ -214,7 +215,7 @@
 
   /* ---------------------------------------------------------- input */
   #drop {
-    border: 3px dashed var(--edge);
+    border: 1.5px dashed var(--edge);
     border-radius: var(--radius);
     background: var(--panel-2);
     box-shadow: var(--shadow);
@@ -225,15 +226,15 @@
   }
   #drop:hover { background: var(--accent-soft); }
   #drop:active, #drop.hot {
-    transform: translate(4px, 4px);
-    box-shadow: 0 0 0 var(--edge);
+    transform: none;
+    border-color: var(--accent);
     background: var(--accent-soft);
     border-style: solid;
   }
   #drop h2 {
     margin: 0 0 7px;
-    font-size: 20px; font-weight: 800;
-    text-transform: uppercase; letter-spacing: 0.5px;
+    font-size: 20px; font-weight: 600;
+    text-transform: none; letter-spacing: -0.01em;
   }
   #drop p { margin: 0; color: var(--muted); font-size: 16px; }
   #file { display: none; }
@@ -241,10 +242,10 @@
   .or {
     display: flex; align-items: center; gap: 19px;
     margin: 27px 0; color: var(--faint);
-    font-size: 15px; font-weight: 700;
-    text-transform: uppercase; letter-spacing: 1px;
+    font-size: 15px; font-weight: 500;
+    text-transform: none; letter-spacing: -0.01em;
   }
-  .or::before, .or::after { content: ""; flex: 1; height: 2.5px; background: var(--edge); opacity: .25; }
+  .or::before, .or::after { content: ""; flex: 1; height: 1px; background: var(--edge); opacity: .25; }
 
   .url-row { display: flex; gap: 13px; }
   .url-row input {
@@ -252,30 +253,30 @@
     padding: 16px 19px;
     font: 19px var(--mono);
     color: var(--ink); background: var(--panel);
-    border: 2.5px solid var(--edge);
+    border: 1px solid var(--edge);
     border-radius: 13px;
     box-shadow: var(--shadow-sm);
   }
   .url-row input::placeholder { color: var(--faint); }
   .url-row input:focus {
     outline: none;
-    transform: translate(2.5px, 2.5px);
-    box-shadow: 0 0 0 var(--edge);
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-soft);
   }
 
   button {
-    font: 700 17px var(--mono);
-    text-transform: uppercase; letter-spacing: 1px;
+    font: 500 17px var(--ui);
+    text-transform: none; letter-spacing: -0.01em;
     cursor: pointer;
     color: var(--ink); background: var(--panel);
-    border: 2.5px solid var(--edge);
+    border: 1px solid var(--edge);
     border-radius: 13px;
     box-shadow: var(--shadow-sm);
     padding: 16px 24px;
     transition: transform .08s, box-shadow .08s;
   }
-  button:hover { transform: translate(-1.5px, -1.5px); box-shadow: 4px 4px 0 var(--edge); }
-  button:active { transform: translate(2.5px, 2.5px); box-shadow: 0 0 0 var(--edge); }
+  button:hover { filter: brightness(1.06); box-shadow: 0 2px 8px rgba(0,0,0,.10); }
+  button:active { transform: scale(0.98); box-shadow: none; }
   /* Marvel red, cut dark enough that white sits at 5.91:1 on it. */
   button.primary { background: var(--hero-ink); color: #fff; border-color: var(--edge); }
   button:disabled { opacity: .45; cursor: not-allowed; transform: none; box-shadow: var(--shadow-sm); }
@@ -288,8 +289,8 @@
   h2.sec {
     display: flex; align-items: center; gap: 12px;
     margin: 0 0 16px;
-    font-size: 15px; font-weight: 800;
-    text-transform: uppercase; letter-spacing: 1.5px;
+    font-size: 15px; font-weight: 600;
+    text-transform: none; letter-spacing: -0.01em;
     color: var(--ink);
     padding-bottom: 8px;
     border-bottom: 3px solid var(--edge);
@@ -298,7 +299,7 @@
   h2.sec::before {
     content: ""; flex: none;
     width: 17px; height: 17px;
-    border: 2.5px solid var(--edge); border-radius: 4px;
+    border: 1px solid var(--edge); border-radius: 4px;
     background: var(--chip, var(--hero));
   }
   #results section:nth-of-type(odd)  h2.sec { --chip: var(--hero); }
@@ -306,7 +307,7 @@
 
   .card {
     background: var(--panel);
-    border: 2.5px solid var(--edge);
+    border: 1px solid var(--edge);
     border-radius: var(--radius);
     box-shadow: var(--shadow);
     overflow: hidden;
@@ -316,7 +317,7 @@
   @media (max-width: 760px) { .preview-grid { grid-template-columns: 1fr; } }
   #preview {
     width: 100%;
-    border: 2.5px solid var(--edge);
+    border: 1px solid var(--edge);
     border-radius: 11px;
     background-color: var(--panel-2);
     background-image:
@@ -331,29 +332,29 @@
   dl.facts { display: grid; grid-template-columns: auto 1fr; gap: 9px 24px; align-content: start; margin: 0; font-size: 17px; }
   dl.facts dt {
     color: var(--muted); white-space: nowrap;
-    font-size: 13px; font-weight: 700;
-    text-transform: uppercase; letter-spacing: 0.5px;
+    font-size: 13px; font-weight: 500;
+    text-transform: none; letter-spacing: -0.01em;
     padding-top: 4px;
   }
-  dl.facts dd { margin: 0; font-weight: 700; overflow-wrap: anywhere; }
+  dl.facts dd { margin: 0; font-weight: 500; overflow-wrap: anywhere; }
 
   table { width: 100%; border-collapse: collapse; font-size: 17px; }
   th, td { text-align: left; padding: 12px 19px; border-bottom: 2px solid var(--line); vertical-align: top; }
   tbody tr:last-child td { border-bottom: none; }
   th {
-    font-size: 13px; font-weight: 800;
-    text-transform: uppercase; letter-spacing: 1px;
+    font-size: 13px; font-weight: 600;
+    text-transform: none; letter-spacing: -0.01em;
     color: var(--ink);
     border-bottom: 3px solid var(--edge);
   }
   td.k {
     color: var(--muted); white-space: nowrap;
-    font-size: 15px; font-weight: 700;
-    text-transform: uppercase; letter-spacing: 0.5px;
+    font-size: 15px; font-weight: 500;
+    text-transform: none; letter-spacing: -0.01em;
   }
   /* anywhere, not break-all: a 16-char hash still breaks when it has to, but
      "TestCam Industries" wraps at the space instead of mid-word. */
-  td.v { font-weight: 700; overflow-wrap: anywhere; }
+  td.v { font-weight: 500; overflow-wrap: anywhere; }
 
   .scroll-x { overflow-x: auto; -webkit-overflow-scrolling: touch; }
 
@@ -377,15 +378,15 @@
     display: flex; gap: 13px; align-items: flex-start;
     margin: 21px 24px; padding: 16px 19px;
     background: var(--panel);
-    border: 2.5px solid var(--edge);
+    border: 1px solid var(--edge);
     border-left: 12px solid var(--flag-color, var(--hero));
     border-radius: 12px;
     font-size: 17px; line-height: 1.6;
   }
   .flag.loc  { --flag-color: var(--g-blue);   background: var(--accent-soft); }
-  .flag.edit { --flag-color: var(--gold); background: var(--warn-soft); }
-  .flag strong { text-transform: uppercase; letter-spacing: 0.5px; font-weight: 800; }
-  .flag a { color: var(--ink); font-weight: 800; }
+  .flag.edit { --flag-color: var(--panel-2); background: var(--warn-soft); }
+  .flag strong { text-transform: none; letter-spacing: -0.01em; font-weight: 600; }
+  .flag a { color: var(--ink); font-weight: 600; }
 
   /* engines */
   /* 400px min gives a clean 2x2 at full width instead of 3 tiles and an
@@ -398,20 +399,20 @@
     padding: 0; overflow: hidden;
     text-decoration: none;
     color: var(--ink); background: var(--panel);
-    border: 2.5px solid var(--edge);
+    border: 1px solid var(--edge);
     border-radius: var(--radius);
     box-shadow: var(--shadow);
     transition: transform .08s, box-shadow .08s;
   }
-  .engine:hover { transform: translate(-2.5px, -2.5px); box-shadow: 7px 7px 0 var(--edge); }
-  .engine:active { transform: translate(4px, 4px); box-shadow: 0 0 0 var(--edge); }
+  .engine:hover { transform: translateY(-1px); box-shadow: 0 4px 14px rgba(0,0,0,.10); }
+  .engine:active { transform: scale(0.985); box-shadow: none; }
   .engine .name {
     background: var(--tile, var(--hero-ink));
     color: var(--tile-ink, #0d0f13);   /* every pairing verified >= 4.5:1 */
     border-bottom: 2.5px solid var(--edge);
     padding: 12px 19px;
-    font-weight: 900; font-size: 18px;
-    text-transform: uppercase; letter-spacing: 0.5px;
+    font-weight: 600; font-size: 18px;
+    text-transform: none; letter-spacing: -0.01em;
   }
   .engine .desc { padding: 16px 19px 19px; font-size: 15px; color: var(--muted); line-height: 1.55; }
   /* Only rendered on coarse-pointer devices: says what the engine actually
@@ -420,15 +421,15 @@
     margin: 0 16px 16px;
     padding: 8px 10px;
     background: var(--warn-soft);
-    border: 2px solid var(--edge);
-    border-left: 6px solid var(--gold);
+    border: 1px solid var(--edge);
+    border-left: 6px solid var(--panel-2);
     border-radius: 7px;
     font-size: 13px; line-height: 1.5; color: var(--ink);
   }
   .engine[aria-disabled="true"] { opacity: .5; pointer-events: none; }
 
   .hash-help { font-size: 16px; color: var(--muted); padding: 0 19px 21px; line-height: 1.7; margin: 0; }
-  .hash-help strong { color: var(--ink); font-weight: 800; }
+  .hash-help strong { color: var(--ink); font-weight: 600; }
 
   .toolbar { display: flex; flex-wrap: wrap; gap: 13px; margin-bottom: 19px; }
 
@@ -436,12 +437,12 @@
     position: fixed; left: 50%; bottom: 35px;
     transform: translate(-50%, 21px);
     background: var(--panel); color: var(--ink);
-    border: 3px solid var(--edge);
+    border: 1px solid var(--edge);
     border-radius: 13px;
     box-shadow: var(--shadow);
     padding: 15px 24px;
-    font-size: 16px; font-weight: 800;
-    text-transform: uppercase; letter-spacing: 0.5px;
+    font-size: 16px; font-weight: 600;
+    text-transform: none; letter-spacing: -0.01em;
     opacity: 0; pointer-events: none;
     transition: opacity .18s, transform .18s;
     max-width: calc(100vw - 48px); text-align: center;
@@ -453,11 +454,11 @@
     border-top: 3px solid var(--edge);
     color: var(--muted); font-size: 16px; line-height: 1.75;
   }
-  footer strong { color: var(--ink); text-transform: uppercase; letter-spacing: 0.5px; font-weight: 800; }
+  footer strong { color: var(--ink); text-transform: none; letter-spacing: -0.01em; font-weight: 600; }
   code {
-    font-family: var(--mono); font-size: .92em; font-weight: 700;
+    font-family: var(--mono); font-size: .92em; font-weight: 500;
     background: var(--panel-2);
-    border: 2px solid var(--edge);
+    border: 1px solid var(--edge);
     padding: 0 7px; border-radius: 7px;
   }
 </style>
@@ -886,7 +887,7 @@
       phone: "Pushes its app on phones. Request the desktop site.",
       byUrl: (u) => "https://www.bing.com/images/search?view=detailv2&iss=sbi&q=imgurl:" + encodeURIComponent(u),
       upload: "https://www.bing.com/visualsearch" },
-    { name: "TinEye", tile: "var(--gold)", ink: "#0d0f13",
+    { name: "TinEye", tile: "var(--panel-2)", ink: "#0d0f13",
       desc: "Exact-match specialist. Sorts by oldest, so it finds the original.",
       byUrl: (u) => "https://tineye.com/search?url=" + encodeURIComponent(u),
       upload: "https://tineye.com/" }
