@@ -19,9 +19,17 @@ c = src.index('  const bitsToHex = (bits) => {')
 d = src.index('  // =========================================================================\n  //  Search engines')
 open('/tmp/hash_extracted.js','w').write(src[c:d])
 import re
-m = re.search(r'<script>\n(.*?)\n</script>', src, re.S)
-open('/tmp/full_script.js','w').write(m.group(1))
-print("ok")
+# There are THREE plain <script> blocks (an /#internal opt-out, the PostHog
+# snippet, and the app). A non-greedy match grabs the FIRST, which is seven
+# lines long, so the syntax check below was passing on the wrong code and
+# would never have caught a break in the app. Take the largest block.
+blocks = re.findall(r'<script>\n(.*?)\n</script>', src, re.S)
+assert blocks, "no <script> blocks found in index.html"
+main = max(blocks, key=len)
+assert 'use strict' in main and len(main.splitlines()) > 200, \
+    f"largest script block looks wrong: {len(main.splitlines())} lines"
+open('/tmp/full_script.js','w').write(main)
+print(f"ok (app block: {len(main.splitlines())} lines of {len(blocks)} blocks)")
 PY
 
 echo

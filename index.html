@@ -404,6 +404,20 @@
     box-shadow: var(--shadow);
     transition: transform .08s, box-shadow .08s;
   }
+  /* People average ~1.8 engines per image, opening each in turn and coming back
+     here between them. This marks the ones already opened for THIS image so the
+     place is not lost. Tiles are rebuilt per image, so the state resets on its
+     own and nothing is stored anywhere. */
+  .engine.used .name::after {
+    content: "opened";
+    float: right;
+    font-size: 12px; font-weight: 600;
+    letter-spacing: .04em; text-transform: uppercase;
+    /* No opacity. Fading this to 72% dropped it to 3.07:1 on the Google Lens
+       tile. Inheriting the name's own colour means the marker is exactly as
+       readable as the label beside it and adds no new contrast deficit. */
+  }
+  .engine.used { border-style: dashed; }
   .engine:hover { transform: translateY(-1px); box-shadow: 0 4px 14px rgba(0,0,0,.10); }
   .engine:active { transform: scale(0.985); box-shadow: none; }
   .engine .name {
@@ -932,6 +946,7 @@
                  el("span", { className: "desc", textContent: e.desc }));
         if (ON_PHONE && e.phone) a.append(el("span", { className: "phone-note", textContent: e.phone }));
         a.addEventListener("click", function () {
+          a.classList.add("used");
           risTrack("engine_click", { engine: e.name, mode: "url", phone: ON_PHONE });
         });
         box.append(a);
@@ -961,6 +976,7 @@
                  el("span", { className: "desc", textContent: e.desc }));
         if (ON_PHONE && e.phone) a.append(el("span", { className: "phone-note", textContent: e.phone }));
         a.addEventListener("click", function () {
+          a.classList.add("used");
           risTrack("engine_click", { engine: e.name, mode: "upload", phone: ON_PHONE });
         });
         box.append(a);
@@ -1231,6 +1247,16 @@
   }
 
   // ---------------------------------------------------------------- wiring
+  // 73% of sessions are phones, where you cannot drop a file and there is no
+  // Ctrl or Cmd key. The HTML keeps the desktop wording as the no-JS default
+  // and the touch wording is swapped in here.
+  if (ON_PHONE) {
+    const dh = $("drop").querySelector("h2");
+    const dp = $("drop").querySelector("p");
+    if (dh) dh.textContent = "Choose a photo";
+    if (dp) dp.textContent = "Tap to pick one from your camera roll, or take a new one";
+  }
+
   const drop = $("drop");
   const fileInput = $("file");
 
