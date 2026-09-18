@@ -109,17 +109,25 @@
     --edge:    #d2d2d7;
 
     /* Marvel: one hot red carried by heavy black inking.
-       --hero is for flat blocks, --hero-ink is the darker cut that clears
-       4.5:1 against white so button labels stay readable (5.91:1). */
+       --hero is for flat blocks, --hero-ink is the darker cut that carries
+       WHITE labels: button.primary, .claim-red and the Yandex tile all sit on
+       it. Measured 2026-09-17, white on the old #0077ed was 4.32:1, under the
+       4.5 floor, and the previous note here claimed 5.91:1 by comparing the
+       blue against white as TEXT. Contrast is symmetric, so that was the same
+       failing pair described backwards. #006fdc measures 4.88:1. */
     --hero:     #0071e3;
-    --hero-ink: #0077ed;
+    --hero-ink: #006fdc;
 
     --hero-deep: #0058b0;
     --gold:      #F0B323;   /* comic gold, the other half of the Marvel pair */
 
     /* One Google color retained, for the one tile that is actually Google.
-       The quartet is deliberately gone: red and black carry the design. */
-    --g-blue:   #0071e3;
+       The quartet is deliberately gone: red and black carry the design.
+       Carries WHITE text (.claim-blue and the Google Lens tile). It used to
+       carry near-black at 4.08:1, and darkening a blue under DARK text only
+       makes it worse, so the ink flipped to white and the blue darkened with
+       it: #006fde measures 4.85:1. Elsewhere --g-blue is borders only. */
+    --g-blue:   #006fde;
 
     --accent:  var(--g-blue);
     --accent-soft: #f0f6ff;
@@ -196,7 +204,7 @@
      verified for the engine tiles: 5.91, 10.21, 5.38 and 19.18 to 1. */
   .claim-red  { background: var(--hero-ink); color: #ffffff; }
   .claim-gold { background: var(--panel-2);     color: var(--ink); border-color: var(--line); }
-  .claim-blue { background: var(--g-blue);   color: #0d0f13; }
+  .claim-blue { background: var(--g-blue);   color: #ffffff; }
   .claim-ink  { background: var(--panel-2);  color: var(--ink); border-color: var(--line); }
 
   .free-block {
@@ -241,7 +249,9 @@
 
   .or {
     display: flex; align-items: center; gap: 19px;
-    margin: 27px 0; color: var(--faint);
+    /* --faint (#86868b) measured 3.62:1 on the page ground at 15px, under the
+       4.5 floor for normal text. --muted is the same family and clears it. */
+    margin: 27px 0; color: var(--muted);
     font-size: 15px; font-weight: 500;
     text-transform: none; letter-spacing: -0.01em;
   }
@@ -422,7 +432,7 @@
   .engine:active { transform: scale(0.985); box-shadow: none; }
   .engine .name {
     background: var(--tile, var(--hero-ink));
-    color: var(--tile-ink, #0d0f13);   /* every pairing verified >= 4.5:1 */
+    color: var(--tile-ink, #0d0f13);   /* re-measured 2026-09-17, all >= 4.5:1 */
     border-bottom: 2.5px solid var(--edge);
     padding: 12px 19px;
     font-weight: 600; font-size: 18px;
@@ -886,7 +896,7 @@
   // tile that is actually Google. Each nameplate names its own text color
   // because they are no longer all light backgrounds.
   const ENGINES = [
-    { name: "Google Lens", tile: "var(--g-blue)", ink: "#0d0f13",
+    { name: "Google Lens", tile: "var(--g-blue)", ink: "#ffffff",
       desc: "Largest index. Best for identifying objects, products and places.",
       phone: "Pushes its app on phones. Share the image into the Google app instead.",
       byUrl: (u) => "https://lens.google.com/uploadbyurl?url=" + encodeURIComponent(u),
@@ -901,7 +911,10 @@
       phone: "Pushes its app on phones. Request the desktop site.",
       byUrl: (u) => "https://www.bing.com/images/search?view=detailv2&iss=sbi&q=imgurl:" + encodeURIComponent(u),
       upload: "https://www.bing.com/visualsearch" },
-    { name: "TinEye", tile: "var(--panel-2)", ink: "#0d0f13",
+    // Theme-aware surface needs theme-aware ink. A hardcoded near-black here
+    // measured 1.38:1 on the dark-mode panel: invisible. var(--ink) flips with
+    // the surface, so it clears in both themes.
+    { name: "TinEye", tile: "var(--panel-2)", ink: "var(--ink)",
       desc: "Exact-match specialist. Sorts by oldest, so it finds the original.",
       byUrl: (u) => "https://tineye.com/search?url=" + encodeURIComponent(u),
       upload: "https://tineye.com/" }
