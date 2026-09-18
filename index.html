@@ -176,8 +176,9 @@
 
   /* ---------------------------------------------------------- header */
   header { margin-bottom: 35px; }
-  /* The wordmark sits reversed out of a solid red plate, the way a comic
-     masthead does. White on this red is 5.91:1. */
+  /* Left over from the pre-restyle red masthead: there is no red plate now,
+     and the wordmark is plain type on the page ground. The accent word is 48px,
+     so its 3.62:1 clears the 3.0 floor WCAG uses for large text. */
   h1 {
     display: block;
     margin: 0 0 14px;
@@ -200,8 +201,11 @@
     font-size: 13px; font-weight: 600;
     text-transform: none; letter-spacing: -0.01em;
   }
-  /* The full palette, one chip each. Every pairing is the same one already
-     verified for the engine tiles: 5.91, 10.21, 5.38 and 19.18 to 1. */
+  /* The full palette, one chip each. Re-measured 2026-09-17 after the blues
+     darkened: claim-red (white on --hero-ink) 4.88:1, claim-blue (white on
+     --g-blue) 4.85:1, claim-gold and claim-ink both well clear. The old note
+     here quoted 5.91, 10.21, 5.38 and 19.18, which described the retired red
+     palette and had been false since the restyle. */
   .claim-red  { background: var(--hero-ink); color: #ffffff; }
   .claim-gold { background: var(--panel-2);     color: var(--ink); border-color: var(--line); }
   .claim-blue { background: var(--g-blue);   color: #ffffff; }
@@ -287,7 +291,8 @@
   }
   button:hover { filter: brightness(1.06); box-shadow: 0 2px 8px rgba(0,0,0,.10); }
   button:active { transform: scale(0.98); box-shadow: none; }
-  /* Marvel red, cut dark enough that white sits at 5.91:1 on it. */
+  /* --hero-ink is a blue now, not the old Marvel red, cut dark enough that
+     white labels sit at 4.88:1 on it. */
   button.primary { background: var(--hero-ink); color: #fff; border-color: var(--edge); }
   button:disabled { opacity: .45; cursor: not-allowed; transform: none; box-shadow: var(--shadow-sm); }
 
