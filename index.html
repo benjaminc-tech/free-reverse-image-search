@@ -212,6 +212,66 @@
   .claim-blue { background: var(--g-blue);   color: #ffffff; }
   .claim-ink  { background: var(--panel-2);  color: var(--ink); border-color: var(--line); }
 
+  /* ------------------------------------------------------- hero visual
+     The page claims the image never leaves the device. This draws that claim
+     rather than asserting it again: the file sits inside a boundary marked as
+     your device, and only the outbound query crosses it. Built from shapes so
+     it costs no bytes, no request and no licence, and it stays legible in both
+     themes because every colour comes from a token. */
+  .hero-viz {
+    margin: 26px 0 0;
+    padding: 22px 18px 18px;
+    background: var(--panel);
+    border: 1px solid var(--edge);
+    border-radius: 15px;
+    box-shadow: var(--shadow-sm);
+  }
+  /* The drawing is SVG, the words are HTML. SVG text scales with the viewBox,
+     so at phone width these labels would render around 6px and be unreadable,
+     and 73% of sessions are phones. Real HTML text stays at its own size, is
+     selectable, and reaches a screen reader as text. */
+  .hero-viz .vz-row { display: flex; align-items: center; gap: 22px; flex-wrap: wrap; }
+  .hero-viz .vz-art { display: block; flex: 1 1 240px; width: 100%; max-width: 330px; height: auto; }
+  /* Stretched and spaced apart so each name lands level with the ray that
+     points at it. Even gaps alone left them drifting off their own dots. */
+  .hero-viz .vz-engines {
+    flex: 1 1 150px; list-style: none; margin: 0; padding: 4px 0; min-height: 0;
+    display: flex; flex-direction: column; justify-content: space-between;
+    align-self: stretch; gap: 8px;
+  }
+  .hero-viz .vz-engines li {
+    font-size: 14.5px; font-weight: 600; color: var(--ink); letter-spacing: -0.01em;
+  }
+  @media (max-width: 560px) {
+    .hero-viz .vz-row { gap: 14px; }
+    .hero-viz .vz-engines { flex-direction: row; flex-wrap: wrap; gap: 8px 10px; }
+    .hero-viz .vz-engines li {
+      font-size: 13px; padding: 6px 11px;
+      background: var(--panel-2); border: 1px solid var(--edge); border-radius: 999px;
+    }
+  }
+  /* 10.5px counts as normal text, so these need 4.5:1. --faint measured 3.62:1
+     on the light panel and only passed because Chrome was in dark mode when it
+     was first checked. --muted is 5.07:1. Do not quieten these back to --faint. */
+  .hero-viz .vz-sub   { font: 500 10.5px var(--ui); letter-spacing: 0.02em; text-transform: uppercase; }
+  .hero-viz figcaption {
+    margin: 14px 2px 0; font-size: 13.5px; line-height: 1.6; color: var(--muted);
+  }
+  .hero-viz figcaption strong { color: var(--ink); font-weight: 600; }
+  /* The rays draw themselves once, left to right, so the eye follows the
+     direction the data actually travels. Purely decorative, so it is switched
+     off entirely when the viewer asks for less motion. */
+  @media (prefers-reduced-motion: no-preference) {
+    .hero-viz .ray { stroke-dasharray: 190; stroke-dashoffset: 190; animation: vz-draw .9s ease-out forwards; }
+    .hero-viz .ray:nth-of-type(1) { animation-delay: .10s; }
+    .hero-viz .ray:nth-of-type(2) { animation-delay: .20s; }
+    .hero-viz .ray:nth-of-type(3) { animation-delay: .30s; }
+    .hero-viz .ray:nth-of-type(4) { animation-delay: .40s; }
+    .hero-viz .dot { opacity: 0; animation: vz-pop .35s ease-out forwards .95s; }
+  }
+  @keyframes vz-draw { to { stroke-dashoffset: 0; } }
+  @keyframes vz-pop  { to { opacity: 1; } }
+
   .free-block {
     margin-top: 46px; padding: 26px 28px;
     background: var(--panel);
@@ -510,6 +570,7 @@
     </ul>
   </header>
 
+
   <div id="drop" role="button" tabindex="0" aria-label="Choose an image file">
     <h2>Drop an image here</h2>
     <p>or click to choose &middot; or press <code>Ctrl</code>/<code>Cmd</code> + <code>V</code> to paste</p>
@@ -522,6 +583,49 @@
     <input type="url" id="url" placeholder="https://example.com/photo.jpg" autocomplete="off" spellcheck="false">
     <button class="primary" type="submit">Analyze</button>
   </form>
+
+  <figure class="hero-viz">
+    <div class="vz-row">
+      <svg class="vz-art" viewBox="0 0 300 200" role="img"
+           aria-label="Your image stays inside your device. Only the search query is sent out.">
+        <rect x="1.5" y="18" width="208" height="164" rx="15"
+              fill="var(--panel-2)" stroke="var(--edge)" stroke-width="1.5" stroke-dasharray="7 5"/>
+        <text x="14" y="11" class="vz-sub" fill="var(--muted)">Your device</text>
+
+        <rect x="26" y="44" width="158" height="96" rx="9" fill="var(--panel)" stroke="var(--edge)" stroke-width="1.5"/>
+        <clipPath id="vzClip"><rect x="27" y="45" width="156" height="94" rx="8"/></clipPath>
+        <g clip-path="url(#vzClip)">
+          <rect x="27" y="45" width="156" height="94" fill="var(--panel-2)"/>
+          <circle cx="148" cy="70" r="11" fill="var(--gold)"/>
+          <path d="M27 120 L72 88 L106 113 L134 94 L183 125 L183 139 L27 139 Z" fill="var(--hero)" opacity="0.28"/>
+          <path d="M27 129 L61 107 L95 127 L128 109 L183 134 L183 139 L27 139 Z" fill="var(--hero-deep)" opacity="0.42"/>
+        </g>
+        <text x="26" y="160" class="vz-sub" fill="var(--muted)">Never uploaded</text>
+
+        <g fill="none" stroke="var(--hero)" stroke-width="2.5" stroke-linecap="round">
+          <path class="ray" d="M210 100 C 248 100, 250 24,  288 24"/>
+          <path class="ray" d="M210 100 C 248 100, 250 75,  288 75"/>
+          <path class="ray" d="M210 100 C 248 100, 250 126, 288 126"/>
+          <path class="ray" d="M210 100 C 248 100, 250 177, 288 177"/>
+        </g>
+        <g class="dot" fill="var(--hero-ink)">
+          <circle cx="292" cy="24" r="5"/><circle cx="292" cy="75" r="5"/>
+          <circle cx="292" cy="126" r="5"/><circle cx="292" cy="177" r="5"/>
+        </g>
+      </svg>
+
+      <ul class="vz-engines">
+        <li>Google Lens</li>
+        <li>Yandex</li>
+        <li>Bing Visual Search</li>
+        <li>TinEye</li>
+      </ul>
+    </div>
+    <figcaption>
+      Your file is opened and read <strong>inside this page</strong>. Only the search itself
+      travels out, to whichever engine you pick.
+    </figcaption>
+  </figure>
 
   <div id="results">
 
