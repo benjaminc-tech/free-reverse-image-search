@@ -47,3 +47,7 @@ node tests/test_hash.mjs
 echo
 echo "== hash robustness =="
 python3 tests/test_robustness.py
+
+echo
+echo "== content credentials (C2PA) =="
+node tests/test_c2pa.mjs

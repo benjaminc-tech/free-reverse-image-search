@@ -12,6 +12,9 @@ offer you.
 
 ![Screenshot](docs/screenshot.png)
 
+- Reads C2PA Content Credentials: says whether a file declares itself AI generated, what made it,
+  and whether it declares an invisible watermark. It reads the record and does not verify the
+  signature, and a file with no record is not thereby genuine
 - One file, no build step, no dependencies, no server
 - EXIF parsed from raw bytes with no library, including GPS to decimal
 - aHash, dHash and pHash, including a hand-rolled DCT
