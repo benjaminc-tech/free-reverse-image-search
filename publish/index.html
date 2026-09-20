@@ -575,7 +575,8 @@
   .hash-help { font-size: 16px; color: var(--muted); padding: 0 19px 21px; line-height: 1.7; margin: 0; }
   .hash-help strong { color: var(--ink); font-weight: 600; }
 
-  .toolbar { display: flex; flex-wrap: wrap; gap: 13px; margin-bottom: 19px; }
+  .toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: 13px; margin-bottom: 19px; }
+  .allnote { color: var(--muted); font-size: 14px; }
 
   .toast {
     position: fixed; left: 50%; bottom: 35px;
@@ -612,7 +613,9 @@
 
   <div class="topnav"><div class="in">
     <span class="brand">Reverse Image Search</span>
-    <nav><a href="#engines">Engines</a><a href="#how">How it works</a></nav>
+    <nav><a href="#engines">Engines</a><a href="#how">How it works</a><a
+      href="https://github.com/benjaminc-tech/free-reverse-image-search"
+      target="_blank" rel="noopener">View source</a></nav>
   </div></div>
 
   <header class="hero">
@@ -679,7 +682,9 @@
     </div>
     <figcaption>
       Your file is opened and read <strong>inside this page</strong>. Only the search itself
-      travels out, to whichever engine you pick.
+      travels out, to whichever engine you pick. You do not have to take that on trust:
+      <a href="https://github.com/benjaminc-tech/free-reverse-image-search" target="_blank"
+      rel="noopener">read the source</a>, it is one file.
     </figcaption>
   </figure>
 
@@ -1275,6 +1280,32 @@
 
     if (imageUrl) {
       note.textContent = "Opens in a new tab with this image URL handed straight to the engine.";
+
+      // Search all four at once. Only offered here, on the URL path. For a local
+      // file the engine links go to each engine's upload page, so a "search all"
+      // there would open four pages that have not searched anything and still
+      // want the file. That is a button that looks like it worked and did not.
+      const allBar = el("div", { className: "toolbar" });
+      const allBtn = el("button", { className: "primary", textContent: "Search all four" });
+      allBtn.addEventListener("click", () => {
+        let opened = 0;
+        for (const e of ENGINES) {
+          const w = window.open(e.byUrl(imageUrl), "_blank", "noopener");
+          if (w) opened++;
+        }
+        [...box.querySelectorAll(".engine")].forEach(a => a.classList.add("used"));
+        risTrack("search_all", { opened, of: ENGINES.length, phone: ON_PHONE });
+        if (opened === 0) {
+          toast("Your browser blocked the new tabs. Allow pop-ups for this page, or use the tiles below.");
+        } else if (opened < ENGINES.length) {
+          toast(`Opened ${opened} of ${ENGINES.length}. The rest were blocked as pop-ups.`);
+        }
+      });
+      allBar.append(allBtn);
+      allBar.append(el("span", { className: "allnote",
+        textContent: "Opens four tabs. Your browser may ask to allow pop-ups." }));
+      box.parentNode.insertBefore(allBar, box);
+
       for (const e of ENGINES) {
         const a = el("a", { className: "engine", href: e.byUrl(imageUrl), target: "_blank", rel: "noopener noreferrer" });
         a.style.setProperty("--tile", e.tile);
@@ -1304,6 +1335,16 @@
       });
       copyBtn.addEventListener("click", copyImageToClipboard);
       bar.append(copyBtn);
+
+      // A stripped copy, made here. Re-encoding through a canvas discards every
+      // metadata segment, EXIF and GPS included, because the canvas only ever
+      // held pixels. Offered whenever a file is loaded, not only when GPS was
+      // found: a file can carry a camera serial or an owner name with no
+      // coordinates at all, and those are worth removing too.
+      const stripBtn = el("button", { textContent: "Download without metadata" });
+      stripBtn.addEventListener("click", downloadStripped);
+      bar.append(stripBtn);
+
       box.parentNode.insertBefore(bar, box);
       for (const e of ENGINES) {
         const a = el("a", { className: "engine", href: e.upload, target: "_blank", rel: "noopener noreferrer" });
@@ -1452,6 +1493,52 @@
   let currentObjUrl = null; // object URL to revoke on the next load
 
   // Re-encode to PNG, which is the only format the clipboard reliably accepts.
+  // Re-encode to PNG and hand the result back as a download. The canvas has no
+  // access to the original file's metadata segments, so what comes out carries
+  // pixels and nothing else. Local, like everything here: nothing is uploaded to
+  // strip it, which is the usual reason these tools want your file.
+  async function downloadStripped() {
+    if (!currentBlob) return;
+    try {
+      const clean = await toStripped(currentBlob);
+      const url = URL.createObjectURL(clean);
+      const a = el("a", { href: url, download: strippedName(currentBlob, clean.type) });
+      document.body.append(a);
+      a.click();
+      a.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 10000);
+      risTrack("strip_click", { result: "ok" });
+      toast("Saved a copy with the metadata removed.");
+    } catch (err) {
+      risTrack("strip_click", { result: "failed" });
+      toast("That image could not be re-encoded.");
+    }
+  }
+
+  function strippedName(blob, type) {
+    const base = (blob.name || "image").replace(/\.[^.]+$/, "");
+    return base + "-no-metadata" + (type === "image/jpeg" ? ".jpg" : ".png");
+  }
+
+  // Re-encode for download, keeping JPEG as JPEG. Going through PNG turned a
+  // 16KB photo into 283KB, and handing someone a file seventeen times larger
+  // than the one they gave you is not a fix. PNG is still used for the
+  // clipboard, where it is the format that actually pastes.
+  function toStripped(blob) {
+    const type = blob.type === "image/jpeg" ? "image/jpeg" : "image/png";
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      img.onload = () => {
+        const c = document.createElement("canvas");
+        c.width = img.naturalWidth; c.height = img.naturalHeight;
+        c.getContext("2d").drawImage(img, 0, 0);
+        c.toBlob(b => b ? resolve(b) : reject(new Error("encode failed")), type, 0.95);
+      };
+      img.onerror = () => reject(new Error("decode failed"));
+      img.src = URL.createObjectURL(blob);
+    });
+  }
+
   function toPng(blob) {
     if (blob.type === "image/png") return Promise.resolve(blob);
     return new Promise((resolve, reject) => {
@@ -1533,8 +1620,11 @@
     $("preview").src = img.src;
     renderFacts(Object.assign({ width: img.naturalWidth, height: img.naturalHeight }, info));
     // renderEngines may insert a toolbar; clear any previous one first
-    const stale = document.querySelector("#engines").parentNode.querySelector(".toolbar");
-    if (stale) stale.remove();
+    // Two code paths insert a toolbar here now, the URL path's "search all" and
+    // the local file path's share/copy/strip bar. Removing only the first would
+    // leave the other behind when switching between them.
+    document.querySelector("#engines").parentNode
+      .querySelectorAll(".toolbar").forEach(t => t.remove());
     renderEngines(imageUrl);
     renderExif(exif, c2pa);
     renderHashes(img);
