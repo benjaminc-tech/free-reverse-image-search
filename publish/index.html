@@ -176,7 +176,7 @@
   .wrap { max-width: 1050px; margin: 0 auto; padding: 40px 24px 110px; }
 
   /* ---------------------------------------------------------- header */
-  header { margin-bottom: 35px; }
+  header { margin-bottom: 0; }
   /* Left over from the pre-restyle red masthead: there is no red plate now,
      and the wordmark is plain type on the page ground. The accent word is 48px,
      so its 3.62:1 clears the 3.0 floor WCAG uses for large text. */
@@ -271,6 +271,58 @@
   }
   @keyframes vz-draw { to { stroke-dashoffset: 0; } }
   @keyframes vz-pop  { to { opacity: 1; } }
+
+  /* --------------------------------------------------- landing structure
+     Laid out the way a product page is: a sticky nav, a centred hero, a three
+     up stat row, then the work. One translation is deliberate. On a marketing
+     page the hero's centrepiece is a button; here the drop zone IS the button,
+     so it sits in the hero rather than below one. People arrive to do a job,
+     and the measured sessions are under four minutes. */
+  .topnav {
+    position: sticky; top: 0; z-index: 20;
+    background: var(--bg); border-bottom: 1px solid var(--edge);
+    margin: 0 -24px 0; padding: 0 24px;
+  }
+  .topnav .in {
+    display: flex; align-items: center; justify-content: space-between; gap: 16px;
+    padding: 13px 0;
+  }
+  .topnav .brand { font-weight: 700; font-size: 15px; letter-spacing: -0.02em; }
+  .topnav nav a {
+    color: var(--muted); text-decoration: none; font-size: 13.5px;
+    font-weight: 600; margin-left: 17px;
+  }
+  .topnav nav a:hover { color: var(--ink); }
+  @media (max-width: 520px) { .topnav nav a { margin-left: 12px; font-size: 13px; } }
+
+  .hero { text-align: center; padding: 42px 0 34px; }
+  /* The nav is sticky, so an anchor jump would otherwise land the heading
+     underneath it. Clear its height plus a little breathing room. */
+  #how, #engines { scroll-margin-top: 68px; }
+  .hero h1 { margin: 0 auto 16px; max-width: 17ch; text-wrap: balance; }
+  .hero .tagline { margin: 0 auto; max-width: 54ch; font-size: 17.5px; }
+
+  .statrow {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px;
+    margin: 30px 0 0; padding: 0; list-style: none;
+  }
+  @media (max-width: 520px) { .statrow { grid-template-columns: 1fr; } }
+  .statrow li {
+    background: var(--panel-2); border: 1px solid var(--edge); border-radius: 12px;
+    padding: 17px 14px; text-align: center;
+  }
+  .statrow b { display: block; font-size: 25px; letter-spacing: -0.03em; line-height: 1.15; }
+  .statrow span { color: var(--muted); font-size: 12.5px; font-weight: 600; }
+
+  .faq { display: grid; gap: 13px; margin-top: 16px; }
+  .faq > div {
+    background: var(--panel); border: 1px solid var(--edge); border-radius: 13px;
+    padding: 18px 20px;
+  }
+  .faq h3 { margin: 0 0 6px; font-size: 15.5px; font-weight: 650; letter-spacing: -0.012em; }
+  .faq p { margin: 0 0 10px; font-size: 14.5px; line-height: 1.7; color: var(--muted); }
+  .faq p:last-child { margin-bottom: 0; }
+  .faq strong { color: var(--ink); }
 
   .free-block {
     margin-top: 46px; padding: 26px 28px;
@@ -558,15 +610,19 @@
 <body>
 <div class="wrap">
 
-  <header>
+  <div class="topnav"><div class="in">
+    <span class="brand">Reverse Image Search</span>
+    <nav><a href="#engines">Engines</a><a href="#how">How it works</a></nav>
+  </div></div>
+
+  <header class="hero">
     <h1>Reverse Image <span class="hot">Search</span></h1>
-    <p class="tagline">Search one image across four engines at once, and read what the file itself reveals.
-    Free, with no account and no upload.</p>
-    <ul class="claims">
-      <li class="claim claim-red">Free forever</li>
-      <li class="claim claim-gold">No account</li>
-      <li class="claim claim-blue">Nothing uploaded</li>
-      <li class="claim claim-ink">No ads</li>
+    <p class="tagline">Search one image across four engines at once, and read what the file
+    itself reveals. Free, with no account and no upload.</p>
+    <ul class="statrow">
+      <li><b>4</b><span>engines, one drop</span></li>
+      <li><b>0</b><span>files uploaded</span></li>
+      <li><b>Free</b><span>no account, no ads</span></li>
     </ul>
   </header>
 
@@ -584,7 +640,7 @@
     <button class="primary" type="submit">Analyze</button>
   </form>
 
-  <figure class="hero-viz">
+  <figure class="hero-viz" id="engines">
     <div class="vz-row">
       <svg class="vz-art" viewBox="0 0 300 200" role="img"
            aria-label="Your image stays inside your device. Only the search query is sent out.">
@@ -674,29 +730,46 @@
 
   </div>
 
-  <section class="free-block">
-    <h2>Free, and staying that way</h2>
-    <p>There is no paid tier, no pro version, no trial that expires, and nothing to renew.
-    You do not need an account and you are never asked for an email. Improvements land here
-    the next time you load the page, at no cost, because there is no other version to sell you.</p>
-    <p>It costs nothing to run, which is why it can stay free: the whole tool is one HTML file
-    that does its work in your browser. There is no server holding your images, so there is no
-    bill that would eventually have to be passed on to you.</p>
-    <p><strong>What is measured.</strong> This page counts visits and which buttons get used,
-    so it is possible to tell whether any of it is useful. Your images are not part of that:
-    no file, no filename, no image address, and no EXIF values ever leave your browser.
-    Session recording is off and the address bar is stripped of its query before anything is
-    sent, because the address can contain the very image you are searching for.</p>
+  <section id="how">
+    <h2 class="sec">How it works</h2>
+    <div class="faq">
+      <div>
+        <h3>Why does it hand the image back to me instead of searching directly?</h3>
+        <p>Search engines have to be able to fetch the image themselves, so a URL can be passed
+        straight to all four. A file on your own device has no public address. Rather than upload
+        it somewhere to give it one, this hands it back to you: share it into another app on a
+        phone, or copy and paste it into an engine on a desktop.</p>
+      </div>
+      <div>
+        <h3>Which app do I share into on a phone?</h3>
+        <p>The <strong>Google app</strong>, the one with the colored G. The share sheet lists
+        Chrome and Google side by side and only Google runs Lens, so picking Chrome is the
+        common mistake.</p>
+      </div>
+      <div>
+        <h3>Is anything really not uploaded?</h3>
+        <p>Nothing you load is sent anywhere. The EXIF parsing, the Content Credentials reading
+        and the hashing all happen in this page. The whole tool is one HTML file, so you can read
+        it yourself and confirm there is no upload path, which is not something a hosted tool can
+        offer you.</p>
+      </div>
+      <div>
+        <h3>What is measured, then?</h3>
+        <p>Visits and which buttons get used, so it is possible to tell whether any of this is
+        useful. Your images are not part of that: <strong>no file, no filename, no image address
+        and no EXIF values ever leave your browser</strong>. Session recording is off, and the
+        address bar is stripped of its query before anything is sent, because the address can
+        contain the very image you are searching for.</p>
+      </div>
+      <div>
+        <h3>Will it stay free?</h3>
+        <p>Yes. There is no paid tier, no pro version, no trial that expires and nothing to renew.
+        You are never asked for an email. It costs almost nothing to run, because there is no
+        server holding your images, so there is no bill that would eventually have to reach you.
+        Improvements land here the next time you load the page.</p>
+      </div>
+    </div>
   </section>
-
-  <footer>
-    <p><strong>How this works.</strong> Reverse image search engines need to be able to fetch the image
-    themselves, so a URL can be handed straight to all four. A file on your own device has no public address,
-    and rather than upload it somewhere, this hands it to you: share it into the Google app on a phone, or copy
-    it and paste it into an engine on a desktop. On a phone the share sheet lists Chrome and Google side by
-    side and only Google runs Lens, so pick the one with the colored G. Everything else, the EXIF
-    parsing and the hashing, is computed here in the page. Nothing you load is sent anywhere.</p>
-  </footer>
 
 </div>
 
