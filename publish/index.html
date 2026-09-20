@@ -692,8 +692,9 @@
   <footer>
     <p><strong>How this works.</strong> Reverse image search engines need to be able to fetch the image
     themselves, so a URL can be handed straight to all four. A file on your own device has no public address,
-    and rather than upload it somewhere, this hands it to you: share it into another app on a phone, or copy
-    it and paste it into an engine on a desktop. Everything else, the EXIF parsing and the hashing, is
+    and rather than upload it somewhere, this hands it to you: share it into the Google app on a phone, or copy
+    it and paste it into an engine on a desktop. On a phone the share sheet lists Chrome and Google side by
+    side and only Google runs Lens, so pick the one with the coloured G. Everything else, the EXIF parsing and the hashing, is
     computed here in the page. Nothing you load is sent anywhere.</p>
   </footer>
 
@@ -1146,7 +1147,9 @@
   const ENGINES = [
     { name: "Google Lens", tile: "var(--g-blue)", ink: "#ffffff",
       desc: "Largest index. Best for identifying objects, products and places.",
-      phone: "Pushes its app on phones. Share the image into the Google app instead.",
+      // The share sheet offers Chrome and Google as separate targets and people
+      // reach for Chrome, which has no Lens. Naming the wrong one is the fix.
+      phone: "Pushes its app on phones. Share the image into the Google app, the one with the coloured G. Chrome will not do it.",
       byUrl: (u) => "https://lens.google.com/uploadbyurl?url=" + encodeURIComponent(u),
       upload: "https://lens.google.com/" },
     { name: "Yandex", tile: "var(--hero-ink)", ink: "#ffffff",
@@ -1214,7 +1217,7 @@
       }
     } else {
       note.textContent = canShareImage()
-        ? "This image is only on your device, so there is no address to hand over. Share it straight into the Google app, or copy it and paste into an engine below."
+        ? "This image is only on your device, so there is no address to hand over. Tap Share image, then pick the Google app, the one with the coloured G. Do not pick Chrome, it cannot search an image. You can also copy it and paste into an engine below."
         : "This image is only on your computer, so there is no address to hand over. Copy it to the clipboard, then paste into the engine with Ctrl/Cmd + V.";
       const bar = el("div", { className: "toolbar" });
       if (canShareImage()) {
