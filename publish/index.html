@@ -707,7 +707,7 @@
     </section>
 
     <section>
-      <h2 class="sec">What the file says about itself</h2>
+      <h2 class="sec" id="metaHeading">What the file says about itself</h2>
       <div class="card">
         <div id="exifFlags"></div>
         <div class="scroll-x"><table id="exifTable"><tbody></tbody></table></div>
@@ -1610,6 +1610,51 @@
     return new File([blob], `image.${ext}`, { type: blob.type });
   }
 
+  // This tool does TWO jobs and only one of them was measured. engine_click counts the
+  // people who came to find where an image appeared. It says nothing about the people who
+  // came to read what a file contains, and after the C2PA reader shipped on 2026-09-19
+  // that second group grew: images carrying EXIF went from 21 of 71 in the week of
+  // 09-13 to 55 of 95 in the week of 09-20, while engine clicks halved. That looked like
+  // a regression and was actually a different job being done.
+  //
+  // metadata_read fires once per loaded image, and only when the panel has been visible
+  // for a moment, so it records reading rather than merely rendering. It carries no file
+  // content: whether EXIF was present and whether a C2PA record was present, nothing else.
+  var metaArmed = null, metaTimer = null;
+
+  function armMetadataRead(props) {
+    metaArmed = props || {};
+    clearTimeout(metaTimer);
+  }
+
+  (function watchMetadataPanel() {
+    // Observe the HEADING, not the section. The section contains the EXIF table and can
+    // be taller than a phone screen, and an element taller than about 2.5 viewports can
+    // never reach a 40% intersection ratio, so observing the section would have meant
+    // this never fired on mobile, which is roughly 85% of sessions.
+    var target = document.getElementById("metaHeading") || document.getElementById("exifFlags");
+    if (!target || typeof IntersectionObserver !== "function") return;
+    new IntersectionObserver(function (entries) {
+      entries.forEach(function (entry) {
+        if (!metaArmed) return;
+        if (entry.isIntersecting) {
+          clearTimeout(metaTimer);
+          metaTimer = setTimeout(function () {
+            if (!metaArmed) return;
+            risTrack("metadata_read", {
+              exif_found: metaArmed.exif_found,
+              c2pa: metaArmed.c2pa,
+              phone: ON_PHONE
+            });
+            metaArmed = null;
+          }, 1200);
+        } else {
+          clearTimeout(metaTimer);
+        }
+      });
+    }, { threshold: 0.9 }).observe(target);
+  })();
+
   // Footer product links. Instrumented because it has never been measured whether
   // this audience will click a commercial link at all: they click through to a search
   // engine readily, which is a free action, and that says nothing about a paid one.
@@ -1684,6 +1729,7 @@
         c2pa: c2pa ? "present" : "absent",
         c2pa_source: c2pa && c2pa.sourceType ? c2pa.sourceType : null
       });
+      armMetadataRead({ exif_found: !!(exif && exif.count), c2pa: c2pa ? "present" : "absent" });
       show({ name: file.name, type: file.type, size: file.size, source: "Local file" }, img, exif, null, c2pa);
     } catch (err) {
       toast("That image could not be decoded.");
@@ -1742,6 +1788,7 @@
       c2pa: c2pa ? "present" : "absent",
       c2pa_source: c2pa && c2pa.sourceType ? c2pa.sourceType : null
     });
+    armMetadataRead({ exif_found: !!(exif && exif.count), c2pa: c2pa ? "present" : "absent" });
     show({ name, type: "Remote image", size: bytes, source: parsed.hostname }, img, exif, url, c2pa);
   }
 
