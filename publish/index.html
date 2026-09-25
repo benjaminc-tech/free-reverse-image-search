@@ -298,7 +298,7 @@
   .hero { text-align: center; padding: 42px 0 34px; }
   /* The nav is sticky, so an anchor jump would otherwise land the heading
      underneath it. Clear its height plus a little breathing room. */
-  #how, #engines { scroll-margin-top: 68px; }
+  #how, #enginesIntro { scroll-margin-top: 68px; }
   .hero h1 { margin: 0 auto 16px; max-width: 17ch; text-wrap: balance; }
   .hero .tagline { margin: 0 auto; max-width: 54ch; font-size: 17.5px; }
 
@@ -613,7 +613,7 @@
 
   <div class="topnav"><div class="in">
     <span class="brand">Reverse Image Search</span>
-    <nav><a href="#engines">Engines</a><a href="#how">How it works</a><a
+    <nav><a href="#enginesIntro">Engines</a><a href="#how">How it works</a><a
       href="https://github.com/benjaminc-tech/free-reverse-image-search"
       target="_blank" rel="noopener">View source</a></nav>
   </div></div>
@@ -643,7 +643,7 @@
     <button class="primary" type="submit">Analyze</button>
   </form>
 
-  <figure class="hero-viz" id="engines">
+  <figure class="hero-viz" id="enginesIntro">
     <div class="vz-row">
       <svg class="vz-art" viewBox="0 0 300 200" role="img"
            aria-label="Your image stays inside your device. Only the search query is sent out.">
@@ -1612,10 +1612,10 @@
 
   // This tool does TWO jobs and only one of them was measured. engine_click counts the
   // people who came to find where an image appeared. It says nothing about the people who
-  // came to read what a file contains, and after the C2PA reader shipped on 2026-09-19
-  // that second group grew: images carrying EXIF went from 21 of 71 in the week of
-  // 09-13 to 55 of 95 in the week of 09-20, while engine clicks halved. That looked like
-  // a regression and was actually a different job being done.
+  // came to read what a file contains, which is a separate job worth counting.
+  // (Engine clicks halved in the week of 09-20. That was first put down to this second
+  // job growing; it was actually a duplicate id="engines" that rendered the engine
+  // buttons above the results. Fixed 2026-09-25.)
   //
   // metadata_read fires once per loaded image, and only when the panel has been visible
   // for a moment, so it records reading rather than merely rendering. It carries no file
