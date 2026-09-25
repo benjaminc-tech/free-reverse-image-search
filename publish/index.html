@@ -776,6 +776,20 @@
     </div>
   </section>
 
+  <footer>
+    <p>Built by Ben. This tool is free and stays that way: no account, no upload,
+    no tracking of your images. The source is
+    <a href="https://github.com/benjaminc-tech/free-reverse-image-search" target="_blank"
+    rel="noopener">on GitHub</a> under the MIT license.</p>
+    <p>Other things I have made, unrelated to this page:
+    <a href="https://getqrcodepro.com/?utm_source=freereverseimagesearch&amp;utm_medium=footer"
+       target="_blank" rel="noopener" data-product="qrcodepro">QR Code Pro</a>,
+    a QR code generator that runs offline in a browser for a single $29 payment, and
+    <a href="https://upliftcoach.netlify.app/?utm_source=freereverseimagesearch&amp;utm_medium=footer"
+       target="_blank" rel="noopener" data-product="upliftcoach">Uplift Coach</a>,
+    an AI life coach on Telegram with daily check-ins, at $29 a month.</p>
+  </footer>
+
 </div>
 
 <div class="toast" id="toast"></div>
@@ -1595,6 +1609,18 @@
     const ext = (blob.type.split("/")[1] || "png").replace("jpeg", "jpg");
     return new File([blob], `image.${ext}`, { type: blob.type });
   }
+
+  // Footer product links. Instrumented because it has never been measured whether
+  // this audience will click a commercial link at all: they click through to a search
+  // engine readily, which is a free action, and that says nothing about a paid one.
+  document.querySelectorAll("footer a[data-product]").forEach(function (a) {
+    a.addEventListener("click", function () {
+      risTrack("footer_product_click", {
+        product: a.dataset.product,
+        phone: ON_PHONE
+      });
+    });
+  });
 
   async function shareImage() {
     if (!currentBlob) return;
