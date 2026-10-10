@@ -16,5 +16,11 @@ aHash/dHash/pHash. No server, nothing uploaded.
   they cannot drift from what ships.
 - ChatGPT drives most traffic and strips the referrer. Attribute it on
   `utm_source=chatgpt.com`, never on `$referring_domain`.
-- Contrast was re-measured 2026-09-17 across 98 elements in both themes. Tile
-  inks pair with theme-aware surfaces; if you change a tile colour, re-measure.
+- Contrast was re-measured 2026-09-17 across 98 elements in both themes, and
+  again for the ui v2 pass (2026-10-09). Engine cards are now one style: ink on
+  panel with an accent outline (3.47:1 on the dark panel, the tightest pair).
+  If you change a card or surface color, re-measure.
+- ui v2 (2026-10-09) puts the engine buttons right under a small thumbnail so
+  they are on the first phone screen after a load. Every event carries `ui`,
+  and `metadata_read` carries `scrolled`; compare across versions on those,
+  not raw counts.
