@@ -87,7 +87,7 @@
     capture_pageleave: true,
     sanitize_properties: risScrub
   });
-  posthog.register({ site: 'freereverseimagesearch' });
+  posthog.register({ site: 'freereverseimagesearch', ui: 'v2' });
   if (window.__RIS_INTERNAL) posthog.opt_out_capturing();
 
   // Small helper so the rest of the page never talks to posthog directly.
@@ -111,8 +111,7 @@
 
     /* Marvel: one hot red carried by heavy black inking.
        --hero is for flat blocks, --hero-ink is the darker cut that carries
-       WHITE labels: button.primary, .claim-red and the Yandex tile all sit on
-       it. Measured 2026-09-17, white on the old #0077ed was 4.32:1, under the
+       WHITE labels: button.primary and .claim-red sit on it. Measured 2026-09-17, white on the old #0077ed was 4.32:1, under the
        4.5 floor, and the previous note here claimed 5.91:1 by comparing the
        blue against white as TEXT. Contrast is symmetric, so that was the same
        failing pair described backwards. #006fdc measures 4.88:1. */
@@ -122,9 +121,9 @@
     --hero-deep: #0058b0;
     --gold:      #F0B323;   /* comic gold, the other half of the Marvel pair */
 
-    /* One Google color retained, for the one tile that is actually Google.
-       The quartet is deliberately gone: red and black carry the design.
-       Carries WHITE text (.claim-blue and the Google Lens tile). It used to
+    /* The accent blue. Since ui v2 (2026-10-09) it is the outline on all four
+       engine cards: 4.85:1 against white, 3.47:1 against the dark panel, both
+       over the 3:1 floor for a control boundary. Carries WHITE text in .claim-blue. It used to
        carry near-black at 4.08:1, and darkening a blue under DARK text only
        makes it worse, so the ink flipped to white and the blue darkened with
        it: #006fde measures 4.85:1. Elsewhere --g-blue is borders only. */
@@ -220,11 +219,7 @@
      themes because every color comes from a token. */
   .hero-viz {
     margin: 26px 0 0;
-    padding: 22px 18px 18px;
-    background: var(--panel);
-    border: 1px solid var(--edge);
-    border-radius: 15px;
-    box-shadow: var(--shadow-sm);
+    padding: 22px 0 18px;
   }
   /* The drawing is SVG, the words are HTML. SVG text scales with the viewBox,
      so at phone width these labels would render around 6px and be unreadable,
@@ -290,15 +285,18 @@
   .topnav .brand { font-weight: 700; font-size: 15px; letter-spacing: -0.02em; }
   .topnav nav a {
     color: var(--muted); text-decoration: none; font-size: 14.5px;
-    font-weight: 600; margin-left: 17px;
+    font-weight: 600; margin-left: 17px; white-space: nowrap;
   }
   .topnav nav a:hover { color: var(--ink); }
   @media (max-width: 520px) { .topnav nav a { margin-left: 12px; font-size: 14px; } }
+  /* "How it works" wrapped onto two lines on phones. The source link is still
+     in the privacy caption and the footer, so it can go from the bar. */
+  @media (max-width: 440px) { .topnav nav a.src { display: none; } }
 
   .hero { text-align: center; padding: 42px 0 34px; }
   /* The nav is sticky, so an anchor jump would otherwise land the heading
      underneath it. Clear its height plus a little breathing room. */
-  #how, #enginesIntro { scroll-margin-top: 68px; }
+  #how, #enginesIntro, #results { scroll-margin-top: 68px; }
   .hero h1 { margin: 0 auto 16px; max-width: 17ch; text-wrap: balance; }
   .hero .tagline { margin: 0 auto; max-width: 54ch; font-size: 17.5px; }
 
@@ -307,18 +305,13 @@
     margin: 30px 0 0; padding: 0; list-style: none;
   }
   @media (max-width: 520px) { .statrow { grid-template-columns: 1fr; } }
-  .statrow li {
-    background: var(--panel-2); border: 1px solid var(--edge); border-radius: 12px;
-    padding: 17px 14px; text-align: center;
-  }
+  /* Plain figures, not boxes: as bordered tiles they looked like buttons. */
+  .statrow li { padding: 6px 14px; text-align: center; }
   .statrow b { display: block; font-size: 25px; letter-spacing: -0.03em; line-height: 1.15; }
   .statrow span { color: var(--muted); font-size: 13.5px; font-weight: 600; }
 
   .faq { display: grid; gap: 13px; margin-top: 16px; }
-  .faq > div {
-    background: var(--panel); border: 1px solid var(--edge); border-radius: 13px;
-    padding: 18px 20px;
-  }
+  .faq > div { border-top: 1px solid var(--edge); padding: 18px 0 4px; }
   .faq h3 { margin: 0 0 6px; font-size: 15.5px; font-weight: 650; letter-spacing: -0.012em; }
   .faq p { margin: 0 0 10px; font-size: 14.5px; line-height: 1.7; color: var(--muted); }
   .faq p:last-child { margin-bottom: 0; }
@@ -363,6 +356,8 @@
   }
   #drop p { margin: 0; color: var(--muted); font-size: 16px; }
   #file { display: none; }
+
+  .trust { margin: 12px 0 0; text-align: center; color: var(--muted); font-size: 14px; }
 
   .or {
     display: flex; align-items: center; gap: 19px;
@@ -433,18 +428,21 @@
   #results section:nth-of-type(odd)  h2.sec { --chip: var(--hero); }
   #results section:nth-of-type(even) h2.sec { --chip: var(--ink); }
 
-  .card {
-    background: var(--panel);
-    border: 1px solid var(--edge);
-    border-radius: var(--radius);
-    box-shadow: var(--shadow);
-    overflow: hidden;
-  }
+  /* Results sections separate on whitespace and their heading rule rather than
+     a box each. Transparent, so text sits on the page ground, which is the same
+     white as the old panel in light mode and darker (higher contrast) in dark. */
+  .card { overflow: hidden; }
+  .card .empty, .card .hash-help { padding-left: 0; padding-right: 0; }
+  .card th, .card td { padding-left: 0; }
 
-  .preview-grid { display: grid; grid-template-columns: 250px 1fr; gap: 27px; padding: 24px; }
-  @media (max-width: 760px) { .preview-grid { grid-template-columns: 1fr; } }
+  /* The thumbnail is a confirmation, not the content: kept short so the engine
+     buttons land on the first phone screen after a load. At full width a
+     portrait photo ran ~500px tall and pushed every button below the fold. */
+  .result-top { margin: 0 0 14px; }
   #preview {
-    width: 100%;
+    display: block;
+    width: auto; max-width: 100%; max-height: 180px;
+    object-fit: contain;
     border: 1px solid var(--edge);
     border-radius: 11px;
     background-color: var(--panel-2);
@@ -456,6 +454,8 @@
     background-size: 21px 21px;
     background-position: 0 0, 0 11px, 11px -11px, -11px 0;
   }
+
+  @media (max-width: 560px) { #preview { max-height: 120px; } }
 
   dl.facts { display: grid; grid-template-columns: auto 1fr; gap: 9px 24px; align-content: start; margin: 0; font-size: 17px; }
   dl.facts dt {
@@ -504,9 +504,8 @@
 
   .flag {
     display: flex; gap: 13px; align-items: flex-start;
-    margin: 21px 24px; padding: 16px 19px;
+    margin: 21px 0; padding: 16px 19px;
     background: var(--panel);
-    border: 1px solid var(--edge);
     border-left: 12px solid var(--flag-color, var(--hero));
     border-radius: 12px;
     font-size: 17px; line-height: 1.6;
@@ -514,22 +513,23 @@
   .flag.loc  { --flag-color: var(--g-blue);   background: var(--accent-soft); }
   .flag.edit { --flag-color: var(--panel-2); background: var(--warn-soft); }
   .flag.cred { --flag-color: var(--warn); background: var(--warn-soft); }
-  .flag.cred-none { --flag-color: var(--edge); background: var(--panel); }
+  .flag.cred-none { --flag-color: var(--edge); background: var(--panel-2); }
   .flag strong { text-transform: none; letter-spacing: -0.01em; font-weight: 600; }
   .flag a { color: var(--ink); font-weight: 600; }
 
   /* engines */
-  /* 400px min gives a clean 2x2 at full width instead of 3 tiles and an
-     orphan. The min() is load-bearing: without it the track stays 400px on a
-     narrow phone and the tiles overflow the screen and get clipped. */
-  .engines { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(400px, 100%), 1fr)); gap: 16px; }
-  /* Each engine is a comic panel: a flat color nameplate over black rule. */
+  /* Always 2x2. The min-width 0 tracks are what stop long names overflowing. */
+  .engines { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+  @media (max-width: 560px) { .engines { gap: 12px; } }
+  /* One style for all four, so they read as four equal choices and as buttons:
+     an accent outline, ink on panel, and an arrow. They used to carry four
+     different nameplate colors, which read as four different kinds of thing. */
   .engine {
     display: flex; flex-direction: column;
-    padding: 0; overflow: hidden;
+    padding: 0; overflow: hidden; min-height: 88px;
     text-decoration: none;
     color: var(--ink); background: var(--panel);
-    border: 1px solid var(--edge);
+    border: 1.5px solid var(--accent);
     border-radius: var(--radius);
     box-shadow: var(--shadow);
     transition: transform .08s, box-shadow .08s;
@@ -550,26 +550,18 @@
   .engine.used { border-style: dashed; }
   .engine:hover { transform: translateY(-1px); box-shadow: 0 4px 14px rgba(0,0,0,.10); }
   .engine:active { transform: scale(0.985); box-shadow: none; }
+  .engine .name::after { content: "\2197"; float: right; }
   .engine .name {
-    background: var(--tile, var(--hero-ink));
-    color: var(--tile-ink, #0d0f13);   /* re-measured 2026-09-17, all >= 4.5:1 */
-    border-bottom: 2.5px solid var(--edge);
-    padding: 12px 19px;
+    color: var(--ink);
+    padding: 14px 16px 6px;
     font-weight: 600; font-size: 18px;
     text-transform: none; letter-spacing: -0.01em;
   }
-  .engine .desc { padding: 16px 19px 19px; font-size: 15px; color: var(--muted); line-height: 1.55; }
+  .engine .desc { padding: 0 16px 14px; font-size: 15px; color: var(--muted); line-height: 1.5; }
+  @media (max-width: 560px) { .engine .desc { display: none; } .engine .name { font-size: 17px; } }
   /* Only rendered on coarse-pointer devices: says what the engine actually
      does on a phone, since two of them push an app install. */
-  .engine .phone-note {
-    margin: 0 16px 16px;
-    padding: 8px 10px;
-    background: var(--warn-soft);
-    border: 1px solid var(--edge);
-    border-left: 6px solid var(--panel-2);
-    border-radius: 7px;
-    font-size: 14px; line-height: 1.5; color: var(--ink);
-  }
+  .engine .phone-note { padding: 0 16px 14px; font-size: 14px; line-height: 1.45; color: var(--muted); }
   .engine[aria-disabled="true"] { opacity: .5; pointer-events: none; }
 
   .hash-help { font-size: 16px; color: var(--muted); padding: 0 19px 21px; line-height: 1.7; margin: 0; }
@@ -614,14 +606,14 @@
   <div class="topnav"><div class="in">
     <span class="brand">Reverse Image Search</span>
     <nav><a href="#enginesIntro">Engines</a><a href="#how">How it works</a><a
-      href="https://github.com/benjaminc-tech/free-reverse-image-search"
+      class="src" href="https://github.com/benjaminc-tech/free-reverse-image-search"
       target="_blank" rel="noopener">View source</a></nav>
   </div></div>
 
   <header class="hero">
     <h1>Reverse Image <span class="hot">Search</span></h1>
-    <p class="tagline">Search one image across four engines at once, and read what the file
-    itself reveals. Free, with no account and no upload.</p>
+    <p class="tagline">Search one image across four engines at once and see what the file
+    reveals. Free, no account.</p>
     <ul class="statrow">
       <li><b>4</b><span>engines, one drop</span></li>
       <li><b>0</b><span>files uploaded</span></li>
@@ -635,6 +627,8 @@
     <p>or click to choose &middot; or press <code>Ctrl</code>/<code>Cmd</code> + <code>V</code> to paste</p>
     <input type="file" id="file" accept="image/*">
   </div>
+
+  <p class="trust">Processed on your device. Nothing is uploaded.</p>
 
   <div class="or">or search an image already online</div>
 
@@ -681,29 +675,24 @@
       </ul>
     </div>
     <figcaption>
-      Your file is opened and read <strong>inside this page</strong>. Only the search itself
-      travels out, to whichever engine you pick. You do not have to take that on trust:
-      <a href="https://github.com/benjaminc-tech/free-reverse-image-search" target="_blank"
-      rel="noopener">read the source</a>, it is one file.
+      Your file is read <strong>inside this page</strong>. Only the search goes out, to the
+      engine you pick. <a href="https://github.com/benjaminc-tech/free-reverse-image-search"
+      target="_blank" rel="noopener">Read the source</a>, it is one file.
     </figcaption>
   </figure>
 
   <div id="results">
 
     <section>
-      <h2 class="sec">The image</h2>
-      <div class="card">
-        <div class="preview-grid">
-          <img id="preview" alt="Preview of the selected image">
-          <dl class="facts" id="facts"></dl>
-        </div>
-      </div>
+      <h2 class="sec">Search this image</h2>
+      <div class="result-top"><img id="preview" alt="Preview of the selected image"></div>
+      <div id="engineNote" class="empty" style="padding:0 0 12px"></div>
+      <div class="engines" id="engines"></div>
     </section>
 
     <section>
-      <h2 class="sec">Search these engines</h2>
-      <div id="engineNote" class="empty" style="padding:0 0 12px"></div>
-      <div class="engines" id="engines"></div>
+      <h2 class="sec">File details</h2>
+      <div class="card"><dl class="facts" id="facts"></dl></div>
     </section>
 
     <section>
@@ -1233,32 +1222,27 @@
   //  Search engines
   // =========================================================================
 
-  // Red, black and gold carry the set, with Google blue kept for the one
-  // tile that is actually Google. Each nameplate names its own text color
-  // because they are no longer all light backgrounds.
+  // name is the engine_click value in analytics. Never rename it.
   const ENGINES = [
-    { name: "Google Lens", tile: "var(--g-blue)", ink: "#ffffff",
-      desc: "Largest index. Best for identifying objects, products and places.",
+    { name: "Google Lens",
+      desc: "Best for objects, products and places.",
       // The share sheet offers Chrome and Google as separate targets and people
       // reach for Chrome, which has no Lens. Naming the wrong one is the fix.
-      phone: "Pushes its app on phones. Share the image into the Google app, the one with the colored G. Chrome will not do it.",
+      phone: "Use the Google app, not Chrome.",
       byUrl: (u) => "https://lens.google.com/uploadbyurl?url=" + encodeURIComponent(u),
       upload: "https://lens.google.com/" },
-    { name: "Yandex", tile: "var(--hero-ink)", ink: "#ffffff",
-      desc: "Often the strongest for finding the same face or photo elsewhere.",
-      phone: "Works in a phone browser. Good first stop on mobile.",
+    { name: "Yandex",
+      desc: "Best for faces and finding the same photo.",
+      phone: "Works in a phone browser.",
       byUrl: (u) => "https://yandex.com/images/search?rpt=imageview&url=" + encodeURIComponent(u),
       upload: "https://yandex.com/images/" },
-    { name: "Bing Visual Search", tile: "var(--ink)", ink: "var(--bg)",
-      desc: "Good coverage of shopping and stock photography.",
-      phone: "Pushes its app on phones. Request the desktop site.",
+    { name: "Bing Visual Search",
+      desc: "Shopping and stock photos.",
+      phone: "Pushes its app. Request the desktop site.",
       byUrl: (u) => "https://www.bing.com/images/search?view=detailv2&iss=sbi&q=imgurl:" + encodeURIComponent(u),
       upload: "https://www.bing.com/visualsearch" },
-    // Theme-aware surface needs theme-aware ink. A hardcoded near-black here
-    // measured 1.38:1 on the dark-mode panel: invisible. var(--ink) flips with
-    // the surface, so it clears in both themes.
-    { name: "TinEye", tile: "var(--panel-2)", ink: "var(--ink)",
-      desc: "Exact-match specialist. Sorts by oldest, so it finds the original.",
+    { name: "TinEye",
+      desc: "Exact matches, oldest first.",
       byUrl: (u) => "https://tineye.com/search?url=" + encodeURIComponent(u),
       upload: "https://tineye.com/" }
   ];
@@ -1293,7 +1277,7 @@
     box.textContent = "";
 
     if (imageUrl) {
-      note.textContent = "Opens in a new tab with this image URL handed straight to the engine.";
+      note.textContent = "Each opens in a new tab with this image's address.";
 
       // Search all four at once. Only offered here, on the URL path. For a local
       // file the engine links go to each engine's upload page, so a "search all"
@@ -1310,20 +1294,18 @@
         [...box.querySelectorAll(".engine")].forEach(a => a.classList.add("used"));
         risTrack("search_all", { opened, of: ENGINES.length, phone: ON_PHONE });
         if (opened === 0) {
-          toast("Your browser blocked the new tabs. Allow pop-ups for this page, or use the tiles below.");
+          toast("Your browser blocked the new tabs. Allow pop-ups for this page, or use the engine buttons below.");
         } else if (opened < ENGINES.length) {
           toast(`Opened ${opened} of ${ENGINES.length}. The rest were blocked as pop-ups.`);
         }
       });
       allBar.append(allBtn);
       allBar.append(el("span", { className: "allnote",
-        textContent: "Opens four tabs. Your browser may ask to allow pop-ups." }));
+        textContent: "Opens four tabs. Allow pop-ups if asked." }));
       box.parentNode.insertBefore(allBar, box);
 
       for (const e of ENGINES) {
         const a = el("a", { className: "engine", href: e.byUrl(imageUrl), target: "_blank", rel: "noopener noreferrer" });
-        a.style.setProperty("--tile", e.tile);
-        a.style.setProperty("--tile-ink", e.ink);
         a.append(el("span", { className: "name", textContent: e.name }),
                  el("span", { className: "desc", textContent: e.desc }));
         if (ON_PHONE && e.phone) a.append(el("span", { className: "phone-note", textContent: e.phone }));
@@ -1335,8 +1317,8 @@
       }
     } else {
       note.textContent = canShareImage()
-        ? "This image is only on your device, so there is no address to hand over. Tap Share image, then pick the Google app, the one with the colored G. Do not pick Chrome, it cannot search an image. You can also copy it and paste into an engine below."
-        : "This image is only on your computer, so there is no address to hand over. Copy it to the clipboard, then paste into the engine with Ctrl/Cmd + V.";
+        ? "Tap Share image, then pick the Google app (the colored G), not Chrome. Or copy it and paste into an engine."
+        : "Copy the image, open an engine, then paste with Ctrl/Cmd + V.";
       const bar = el("div", { className: "toolbar" });
       if (canShareImage()) {
         const shareBtn = el("button", { className: "primary", textContent: "Share image" });
@@ -1362,8 +1344,6 @@
       box.parentNode.insertBefore(bar, box);
       for (const e of ENGINES) {
         const a = el("a", { className: "engine", href: e.upload, target: "_blank", rel: "noopener noreferrer" });
-        a.style.setProperty("--tile", e.tile);
-        a.style.setProperty("--tile-ink", e.ink);
         a.append(el("span", { className: "name", textContent: e.name }),
                  el("span", { className: "desc", textContent: e.desc }));
         if (ON_PHONE && e.phone) a.append(el("span", { className: "phone-note", textContent: e.phone }));
@@ -1620,12 +1600,30 @@
   // metadata_read fires once per loaded image, and only when the panel has been visible
   // for a moment, so it records reading rather than merely rendering. It carries no file
   // content: whether EXIF was present and whether a C2PA record was present, nothing else.
-  var metaArmed = null, metaTimer = null;
+  var metaArmed = null, metaTimer = null, metaUserScrolled = false, metaIO = null, metaTarget = null;
 
   function armMetadataRead(props) {
     metaArmed = props || {};
+    metaUserScrolled = false;
     clearTimeout(metaTimer);
+    // An observer only calls back when visibility CHANGES. Loading a second image while
+    // the heading is already on screen would never fire, so re-observe for a fresh entry.
+    if (metaIO && metaTarget) { metaIO.unobserve(metaTarget); metaIO.observe(metaTarget); }
   }
+
+  // Since ui v2 the results are shorter, so on a desktop the metadata heading can be
+  // on screen straight after the automatic scroll. "scrolled" says whether the person
+  // moved the page themselves before it counted. Not the scroll event: the smooth
+  // scrollIntoView after a load fires that too.
+  ["wheel", "touchmove"].forEach(function (t) {
+    window.addEventListener(t, function () { metaUserScrolled = true; }, { passive: true });
+  });
+  var SCROLL_KEYS = [" ", "PageDown", "PageUp", "Home", "End", "ArrowDown", "ArrowUp"];
+  window.addEventListener("keydown", function (e) {
+    var t = e.target && e.target.tagName;
+    if (t === "INPUT" || t === "TEXTAREA") return;
+    if (SCROLL_KEYS.indexOf(e.key) !== -1) metaUserScrolled = true;
+  }, { passive: true });
 
   (function watchMetadataPanel() {
     // Observe the HEADING, not the section. The section contains the EXIF table and can
@@ -1634,7 +1632,8 @@
     // this never fired on mobile, which is roughly 85% of sessions.
     var target = document.getElementById("metaHeading") || document.getElementById("exifFlags");
     if (!target || typeof IntersectionObserver !== "function") return;
-    new IntersectionObserver(function (entries) {
+    metaTarget = target;
+    metaIO = new IntersectionObserver(function (entries) {
       entries.forEach(function (entry) {
         if (!metaArmed) return;
         if (entry.isIntersecting) {
@@ -1644,7 +1643,8 @@
             risTrack("metadata_read", {
               exif_found: metaArmed.exif_found,
               c2pa: metaArmed.c2pa,
-              phone: ON_PHONE
+              phone: ON_PHONE,
+              scrolled: metaUserScrolled
             });
             metaArmed = null;
           }, 1200);
@@ -1652,7 +1652,8 @@
           clearTimeout(metaTimer);
         }
       });
-    }, { threshold: 0.9 }).observe(target);
+    }, { threshold: 0.9 });
+    metaIO.observe(target);
   })();
 
   // Footer product links. Instrumented because it has never been measured whether
