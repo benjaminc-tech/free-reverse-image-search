@@ -566,6 +566,8 @@
 
   .hash-help { font-size: 16px; color: var(--muted); padding: 0 19px 21px; line-height: 1.7; margin: 0; }
   .hash-help strong { color: var(--ink); font-weight: 600; }
+  .support { font-size: 16px; color: var(--muted); line-height: 1.7; margin: 0 0 40px; }
+  .support a { color: var(--ink); font-weight: 600; }
 
   .toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: 13px; margin-bottom: 19px; }
   .allnote { color: var(--muted); font-size: 14px; }
@@ -722,6 +724,10 @@
       </div>
     </section>
 
+    <p class="support">Saved you some time? This tool stays free, private and ad-free.
+    <a href="https://goldberger5.gumroad.com/coffee" target="_blank" rel="noopener"
+       data-support="results">Chip in once, any amount</a>.</p>
+
   </div>
 
   <section id="how">
@@ -760,7 +766,9 @@
         <p>Yes. There is no paid tier, no pro version, no trial that expires and nothing to renew.
         You are never asked for an email. It costs almost nothing to run, because there is no
         server holding your images, so there is no bill that would eventually have to reach you.
-        Improvements land here the next time you load the page.</p>
+        Improvements land here the next time you load the page. If it helps you, you can
+        <a href="https://goldberger5.gumroad.com/coffee" target="_blank" rel="noopener"
+           data-support="faq">chip in once</a>, any amount. Nothing changes either way.</p>
       </div>
     </div>
   </section>
@@ -1665,6 +1673,14 @@
         product: a.dataset.product,
         phone: ON_PHONE
       });
+    });
+  });
+
+  // Tip jar (Gumroad coffee page). Measures whether anyone will pay for a tool they
+  // already get free, before any time goes into a paid add-on.
+  document.querySelectorAll("a[data-support]").forEach(function (a) {
+    a.addEventListener("click", function () {
+      risTrack("support_click", { placement: a.dataset.support, phone: ON_PHONE });
     });
   });
 
