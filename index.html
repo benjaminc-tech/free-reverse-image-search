@@ -71,11 +71,18 @@
   // Strip the query string and hash off anything URL shaped before it leaves
   // the browser. ?url= carries the image being searched.
   function risScrub(props) {
-    ["$current_url", "$referrer", "$initial_current_url", "$pathname"].forEach(function (k) {
-      var v = props[k];
-      if (typeof v !== "string") return;
-      props[k] = v.split("?")[0].split("#")[0];
-    });
+    // Every key ending in _url or _referrer, not a fixed list: posthog-js also merges
+    // session props such as $session_entry_url in before this runs.
+    // Nested too: $web_vitals carries the page URL inside $web_vitals_*_event objects.
+    (function scrub(o, depth) {
+      Object.keys(o).forEach(function (k) {
+        var v = o[k];
+        if (v && typeof v === "object" && depth < 3) { scrub(v, depth + 1); return; }
+        if (typeof v !== "string") return;
+        if (k !== "$pathname" && k !== "navigationURL" && !/(_url|_referrer|\$referrer)$/i.test(k)) return;
+        o[k] = v.split("?")[0].split("#")[0];
+      });
+    })(props, 0);
     return props;
   }
 
@@ -87,7 +94,7 @@
     capture_pageleave: true,
     sanitize_properties: risScrub
   });
-  posthog.register({ site: 'freereverseimagesearch', ui: 'v2' });
+  posthog.register({ site: 'freereverseimagesearch', ui: 'v3' });
   if (window.__RIS_INTERNAL) posthog.opt_out_capturing();
 
   // Small helper so the rest of the page never talks to posthog directly.
@@ -359,6 +366,30 @@
 
   .trust { margin: 12px 0 0; text-align: center; color: var(--muted); font-size: 14px; }
 
+  /* Video frame grab. A quiet text button, so the photo path stays the
+     obvious one; the panel only appears once a video is chosen. */
+  .vid-row { margin: 6px 0 0; text-align: center; }
+  button.vid-pick {
+    background: none; border: 0; box-shadow: none; padding: 6px 8px;
+    color: var(--ink); font-size: 14.5px; font-weight: 600;
+    text-decoration: underline; text-underline-offset: 3px;
+  }
+  .vid-panel { margin: 14px 0 0; padding: 14px; background: var(--panel-2); border: 1px solid var(--edge); border-radius: var(--radius); }
+  .vid-panel[hidden] { display: none; }
+  .vid-panel video { display: block; width: 100%; max-height: 300px; background: #000; border-radius: 9px; }
+  .vid-ctl { display: flex; align-items: center; gap: 12px; margin: 12px 0 0; }
+  .vid-ctl input[type=range] { flex: 1; min-width: 0; accent-color: var(--accent); }
+  .vid-time { font: 500 14px var(--mono); color: var(--ink); white-space: nowrap; }
+  .vid-btns { display: flex; flex-wrap: wrap; gap: 10px; margin: 12px 0 0; }
+  .vid-btns button { padding: 12px 18px; font-size: 16px; }
+  .vid-note { margin: 10px 0 0; color: var(--muted); font-size: 14px; line-height: 1.5; }
+
+  /* QR code found inside the loaded image. The decoded text is shown as
+     text, never a link, so nobody is sent anywhere by accident. */
+  .qr-note { margin: 16px 0 0; display: block; }
+  .qr-note code { display: block; margin: 6px 0 8px; padding: 6px 8px; overflow-wrap: anywhere; white-space: pre-wrap; }
+  .qr-note p { margin: 0; font-size: 15px; color: var(--ink); }
+
   .or {
     display: flex; align-items: center; gap: 19px;
     /* --faint (#86868b) measured 3.62:1 on the page ground at 15px, under the
@@ -600,6 +631,71 @@
     border: 1px solid var(--edge);
     padding: 0 7px; border-radius: 7px;
   }
+
+  /* ------------------------------------------------- check modes + crop
+     The mode picker sits UNDER the engine grid, not above it, so the engine
+     buttons stay on the first phone screen after a load (ui v2). The selected
+     chip is white on --hero-ink, the same 4.88:1 pair as button.primary.
+     Checklist text is --ink on --panel-2, well clear in both themes. */
+  .modes { margin: 18px 0 0; }
+  .mode-q { margin: 0 0 8px; font-size: 14px; font-weight: 600; color: var(--muted); }
+  .mode-pick { display: flex; flex-wrap: wrap; gap: 8px; }
+  .mode-pick button {
+    padding: 8px 13px; font-size: 14.5px; font-weight: 600;
+    border-radius: 999px; box-shadow: none;
+  }
+  .mode-pick button[aria-pressed="true"] { background: var(--hero-ink); color: #fff; border-color: var(--hero-ink); }
+  .mode-list {
+    margin: 12px 0 0; padding: 12px 16px 12px 34px;
+    background: var(--panel-2); border-radius: var(--radius);
+    font-size: 15px; line-height: 1.55; color: var(--ink);
+  }
+  .mode-list li + li { margin-top: 6px; }
+  #modeFindings .flag { margin: 12px 0 0; font-size: 15px; }
+  .mode-exif { margin: 10px 0 0; font-size: 15px; line-height: 1.55; color: var(--ink); }
+
+  .crop-note[hidden] { display: none; }
+  .crop-note { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; margin: -4px 0 14px; font-size: 14.5px; color: var(--muted); }
+  .crop-note button { padding: 7px 13px; font-size: 14.5px; box-shadow: none; }
+  .crop-ui {
+    position: fixed; inset: 0; z-index: 50;
+    display: flex; align-items: center; justify-content: center;
+    padding: 12px; background: rgba(0,0,0,.6);
+  }
+  .crop-ui[hidden] { display: none; }
+  .crop-in {
+    width: 100%; max-width: 760px; max-height: 100%; overflow: auto;
+    padding: 16px; background: var(--panel); color: var(--ink);
+    border: 1px solid var(--edge); border-radius: 15px; box-shadow: var(--shadow);
+  }
+  .crop-in h2 { margin: 0 0 6px; font-size: 18px; font-weight: 600; letter-spacing: -0.01em; }
+  .crop-hint { margin: 0 0 12px; font-size: 14.5px; line-height: 1.5; color: var(--muted); }
+  .crop-wrap { text-align: center; }
+  .crop-stage {
+    position: relative; display: inline-block; max-width: 100%;
+    overflow: hidden; touch-action: none; user-select: none; -webkit-user-select: none;
+    cursor: crosshair; border-radius: 6px; vertical-align: top;
+  }
+  .crop-stage img {
+    display: block; max-width: 100%; max-height: calc(100vh - 260px); min-height: 60px;
+    pointer-events: none; -webkit-user-drag: none;
+  }
+  .crop-sel {
+    position: absolute; cursor: move;
+    border: 2px solid #fff;
+    box-shadow: 0 0 0 1px #000, 0 0 0 9999px rgba(0,0,0,.5);
+  }
+  .crop-sel[hidden] { display: none; }
+  .crop-sel .h {
+    position: absolute; width: 22px; height: 22px;
+    background: #fff; border: 2px solid #000; border-radius: 4px;
+  }
+  .crop-sel .nw { left: -2px;  top: -2px;    cursor: nwse-resize; }
+  .crop-sel .ne { right: -2px; top: -2px;    cursor: nesw-resize; }
+  .crop-sel .sw { left: -2px;  bottom: -2px; cursor: nesw-resize; }
+  .crop-sel .se { right: -2px; bottom: -2px; cursor: nwse-resize; }
+  .crop-actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 14px; }
+  .crop-actions button { padding: 12px 18px; font-size: 16px; }
 </style>
 </head>
 <body>
@@ -631,6 +727,23 @@
   </div>
 
   <p class="trust">Processed on your device. Nothing is uploaded.</p>
+
+  <!-- Video frame grab: pick one frame out of a local video and search it as
+       an image. The video is decoded by the browser inside this page. -->
+  <p class="vid-row"><button type="button" class="vid-pick" id="vidPick">Have a video? Pick a frame</button></p>
+  <input type="file" id="vidFile" accept="video/*" hidden>
+  <div class="vid-panel" id="vidPanel" hidden>
+    <video id="vid" muted playsinline preload="auto"></video>
+    <div class="vid-ctl">
+      <input type="range" id="vidSeek" min="0" max="1000" step="1" value="0" aria-label="Move to a frame">
+      <span class="vid-time" id="vidTime">0:00.0</span>
+    </div>
+    <div class="vid-btns">
+      <button type="button" class="primary" id="vidUse" disabled>Use this frame</button>
+      <button type="button" id="vidClose">Close</button>
+    </div>
+    <p class="vid-note" id="vidNote">Drag the slider to the frame you want. The video stays on your device.</p>
+  </div>
 
   <div class="or">or search an image already online</div>
 
@@ -690,6 +803,12 @@
       <div class="result-top"><img id="preview" alt="Preview of the selected image"></div>
       <div id="engineNote" class="empty" style="padding:0 0 12px"></div>
       <div class="engines" id="engines"></div>
+      <div class="modes" id="modeBox">
+        <p class="mode-q" id="modeQ">What are you checking?</p>
+        <div class="mode-pick" id="modePick" role="group" aria-labelledby="modeQ"></div>
+        <div id="modeFindings"></div>
+        <ul class="mode-list" id="modeList"></ul>
+      </div>
     </section>
 
     <section>
@@ -1319,7 +1438,7 @@
         if (ON_PHONE && e.phone) a.append(el("span", { className: "phone-note", textContent: e.phone }));
         a.addEventListener("click", function () {
           a.classList.add("used");
-          risTrack("engine_click", { engine: e.name, mode: "url", phone: ON_PHONE });
+          risTrack("engine_click", { engine: e.name, mode: "url", check: checkMode, phone: ON_PHONE });
         });
         box.append(a);
       }
@@ -1357,7 +1476,7 @@
         if (ON_PHONE && e.phone) a.append(el("span", { className: "phone-note", textContent: e.phone }));
         a.addEventListener("click", function () {
           a.classList.add("used");
-          risTrack("engine_click", { engine: e.name, mode: "upload", phone: ON_PHONE });
+          risTrack("engine_click", { engine: e.name, mode: "upload", check: checkMode, phone: ON_PHONE });
         });
         box.append(a);
       }
@@ -1716,11 +1835,13 @@
     renderEngines(imageUrl);
     renderExif(exif, c2pa);
     renderHashes(img);
+    modeCropAfterShow(exif, c2pa);
     $("results").classList.add("on");
     $("results").scrollIntoView({ behavior: "smooth", block: "start" });
   }
 
-  async function handleFile(file) {
+  async function handleFile(file, via) {
+    if (file && file.type && file.type.startsWith("video/")) { openVideo(file); return; }
     if (!file || !file.type.startsWith("image/")) { toast("That is not an image file."); return; }
 
     if (currentObjUrl) URL.revokeObjectURL(currentObjUrl);
@@ -1739,7 +1860,7 @@
     try {
       const img = await loadImageElement(currentObjUrl, false);
       risTrack("image_loaded", {
-        source: "file",
+        source: via || "file",
         exif_found: !!(exif && exif.count),
         has_gps: !!(exif && exif.gps),
         has_software: !!(exif && exif.fields && exif.fields["Software"]),
@@ -1809,6 +1930,302 @@
     show({ name, type: "Remote image", size: bytes, source: parsed.hostname }, img, exif, url, c2pa);
   }
 
+  // =========================================================================
+  //  Check modes + crop
+  // =========================================================================
+  //  Both act on the results after show() has rendered them. A mode reorders
+  //  the engine cards renderEngines built and shows a short checklist. A crop
+  //  replaces currentBlob with a cropped copy, so share, copy and download use
+  //  it with no change of their own. Both run on the device; nothing is sent.
+
+  // Orders use ENGINES names, the same strings the cards display. null keeps
+  // the ENGINES order. Every engine stays on screen in every mode.
+  const MODES = [
+    { key: "general", label: "General", order: null, tips: [
+      "Google Lens is best for objects, products and places. Yandex is often best for faces.",
+      "TinEye finds exact copies and can sort them oldest first, which shows where a photo appeared early.",
+      "Cropping to one face or one object often finds matches the full image misses.",
+      "No results proves nothing. Many images are simply not indexed." ] },
+    { key: "dating", label: "Dating profile",
+      order: ["Yandex", "Google Lens", "TinEye", "Bing Visual Search"], tips: [
+      "The same face under a different name, age or city is a red flag.",
+      "A professional model, influencer or stock photo is a red flag.",
+      "Crop to just the face and search again. Yandex is usually strongest for faces.",
+      "No results proves nothing. Most real people are not indexed, and a photo that was never posted publicly will not show up either." ] },
+    { key: "marketplace", label: "Marketplace or rental",
+      order: ["Google Lens", "Yandex", "TinEye", "Bing Visual Search"], tips: [
+      "The same photos on another listing, in another city or under another seller is a red flag.",
+      "Photos taken from a real estate site, a hotel or a maker's catalog suggest the poster may not have the item or the place.",
+      "Crop to one distinctive detail, like a room, a view or a logo, and search again.",
+      "No results proves nothing. Ask the seller for a new photo with a specific object or a note with today's date in it." ] },
+    { key: "news", label: "News photo",
+      order: ["TinEye", "Google Lens", "Yandex", "Bing Visual Search"], tips: [
+      "In TinEye, sort the matches by oldest. A copy from before the event means the photo is being reused.",
+      "Read the caption on the earliest copy you find: where and when it says the photo was taken.",
+      "Google Lens often finds the news agency or photographer who published it first.",
+      "No results proves nothing. A very new photo may not be indexed yet." ] },
+    { key: "ai", label: "AI or real?",
+      order: ["Google Lens", "TinEye", "Yandex", "Bing Visual Search"], tips: [
+      "This tool does not detect AI, and no tool can do it reliably. It reads what the file says about itself, shown above.",
+      "A Content Credentials record that says generated by AI is strong evidence. No record proves nothing: most images carry none, and social apps strip it.",
+      "Search Google Lens and TinEye for an original source, like a photographer, an agency or an earlier date.",
+      "Visual tells such as odd hands or garbled text are weak evidence either way now." ] }
+  ];
+
+  let lastQrTracked = null;
+  let checkMode = "general";
+  try {
+    const saved = localStorage.getItem("ris_mode");
+    if (MODES.some(m => m.key === saved)) checkMode = saved;
+  } catch (e) {}
+  let lastFind = { exif: null, c2pa: null };
+
+  function buildModePicker() {
+    const pick = $("modePick");
+    if (!pick || pick.childElementCount) return;
+    for (const m of MODES) {
+      const b = el("button", { type: "button", textContent: m.label });
+      b.dataset.mode = m.key;
+      b.addEventListener("click", () => {
+        if (checkMode === m.key) return;
+        checkMode = m.key;
+        try { localStorage.setItem("ris_mode", m.key); } catch (e) {}
+        risTrack("mode_select", { mode: m.key });
+        applyMode();
+      });
+      pick.append(b);
+    }
+  }
+
+  // EXIF camera fields are easy to edit or copy, so they are a hint only.
+  function exifHint(exif) {
+    const f = (exif && exif.fields) || {};
+    const cam = [f["Camera make"], f["Camera model"]].filter(Boolean).join(" ");
+    let t = cam
+      ? "EXIF names a camera: " + cam + ". EXIF is easy to edit or copy, so treat this as a hint, not proof."
+      : "EXIF: no camera details. That is normal for screenshots, edited files and anything saved from a social or messaging app, and it says nothing about AI either way.";
+    if (f["Software"]) t += " Last saved by " + f["Software"] + ".";
+    return el("p", { className: "mode-exif", textContent: t });
+  }
+
+  function applyMode() {
+    const m = MODES.find(x => x.key === checkMode) || MODES[0];
+    $("modePick").querySelectorAll("button").forEach(b =>
+      b.setAttribute("aria-pressed", String(b.dataset.mode === m.key)));
+
+    const box = $("engines");
+    const order = m.order || ENGINES.map(e => e.name);
+    const rank = (a) => {
+      const n = a.querySelector(".name");
+      const i = n ? order.indexOf(n.textContent) : -1;
+      return i < 0 ? order.length : i;
+    };
+    [...box.querySelectorAll(".engine")].sort((a, b) => rank(a) - rank(b)).forEach(a => box.append(a));
+
+    const fd = $("modeFindings");
+    fd.textContent = "";
+    if (m.key === "ai") {
+      renderC2PA(lastFind.c2pa, fd);
+      fd.append(exifHint(lastFind.exif));
+    }
+    const ul = $("modeList");
+    ul.textContent = "";
+    m.tips.forEach(t => ul.append(el("li", { textContent: t })));
+  }
+
+  let cropOriginal = null; // the loaded file, kept so a crop can be undone
+  let cropUrl = null;      // object URL of the cropped copy
+  let cropRect = null;     // last applied crop, as fractions of the original
+  let cropUI = null;
+
+  function modeCropAfterShow(exif, c2pa) {
+    lastFind = { exif: exif, c2pa: c2pa };
+    cropOriginal = currentBlob;
+    cropRect = null;
+    if (cropUrl) { URL.revokeObjectURL(cropUrl); cropUrl = null; }
+    renderCropNote();
+    // Local files only: a URL search hands the engines the address, so a crop
+    // there would not change what they search.
+    if (currentBlob) {
+      const bar = $("engines").parentNode.querySelector(".toolbar");
+      if (bar) {
+        const b = el("button", { type: "button", textContent: "Crop" });
+        b.addEventListener("click", openCrop);
+        bar.insertBefore(b, bar.children[1] || null);
+      }
+    }
+    buildModePicker();
+    applyMode();
+  }
+
+  function renderCropNote() {
+    let n = $("cropNote");
+    if (!n) {
+      n = el("div", { id: "cropNote", className: "crop-note" });
+      const top = document.querySelector(".result-top");
+      top.parentNode.insertBefore(n, top.nextSibling);
+    }
+    n.textContent = "";
+    n.hidden = !cropRect;
+    if (!cropRect || !currentBlob) return;
+    n.append(el("span", { textContent: "Using a cropped area, " + cropRect.pw + " x " + cropRect.ph +
+      " px. Share, copy and download use the crop." }));
+    const undo = el("button", { type: "button", textContent: "Use full image" });
+    undo.addEventListener("click", resetCrop);
+    n.append(undo);
+  }
+
+  function resetCrop() {
+    if (!cropOriginal) return;
+    currentBlob = cropOriginal;
+    cropRect = null;
+    $("preview").src = currentObjUrl;
+    if (cropUrl) { URL.revokeObjectURL(cropUrl); cropUrl = null; }
+    renderCropNote();
+  }
+
+  function buildCropUI() {
+    const root = el("div", { className: "crop-ui", hidden: true });
+    root.setAttribute("role", "dialog");
+    root.setAttribute("aria-modal", "true");
+    root.setAttribute("aria-labelledby", "cropTitle");
+    const box = el("div", { className: "crop-in" });
+    box.append(el("h2", { id: "cropTitle", textContent: "Crop before searching" }),
+      el("p", { className: "crop-hint", textContent:
+        "Drag across the part you want to search, like one face or one object. Drag the box to move it, " +
+        "or a corner to resize it. The crop is made on your device." }));
+    const wrap = el("div", { className: "crop-wrap" });
+    const stage = el("div", { className: "crop-stage" });
+    const img = el("img", { alt: "The image to crop", draggable: false });
+    const sel = el("div", { className: "crop-sel", hidden: true });
+    ["nw", "ne", "sw", "se"].forEach(c => { const h = el("span", { className: "h " + c }); h.dataset.c = c; sel.append(h); });
+    stage.append(img, sel);
+    wrap.append(stage);
+    const acts = el("div", { className: "crop-actions" });
+    const apply = el("button", { type: "button", className: "primary", textContent: "Apply crop" });
+    const reset = el("button", { type: "button", textContent: "Reset" });
+    const cancel = el("button", { type: "button", textContent: "Cancel" });
+    acts.append(apply, reset, cancel);
+    box.append(wrap, acts);
+    root.append(box);
+    document.body.append(root);
+
+    const ui = { root, img, stage, sel: null, selEl: sel, drag: null };
+    const clamp = (v) => Math.min(1, Math.max(0, v));
+    const at = (e) => {
+      const r = stage.getBoundingClientRect();
+      return { x: clamp((e.clientX - r.left) / r.width), y: clamp((e.clientY - r.top) / r.height) };
+    };
+
+    stage.addEventListener("pointerdown", (e) => {
+      e.preventDefault();
+      const p = at(e);
+      const s = ui.sel;
+      const c = e.target.dataset && e.target.dataset.c;
+      if (s && c) {
+        // Resize from a corner: anchor the opposite corner and redraw.
+        ui.drag = { kind: "draw",
+          ax: c.indexOf("w") >= 0 ? s.x + s.w : s.x,
+          ay: c.indexOf("n") >= 0 ? s.y + s.h : s.y };
+      } else if (s && p.x >= s.x && p.x <= s.x + s.w && p.y >= s.y && p.y <= s.y + s.h) {
+        ui.drag = { kind: "move", ox: p.x - s.x, oy: p.y - s.y };
+      } else {
+        ui.drag = { kind: "draw", ax: p.x, ay: p.y };
+        ui.sel = { x: p.x, y: p.y, w: 0, h: 0 };
+      }
+      try { stage.setPointerCapture(e.pointerId); } catch (err) {}
+      drawSel(ui);
+    });
+    stage.addEventListener("pointermove", (e) => {
+      if (!ui.drag) return;
+      const p = at(e), d = ui.drag;
+      if (d.kind === "draw") {
+        ui.sel = { x: Math.min(d.ax, p.x), y: Math.min(d.ay, p.y),
+                   w: Math.abs(p.x - d.ax), h: Math.abs(p.y - d.ay) };
+      } else {
+        const s = ui.sel;
+        s.x = Math.min(1 - s.w, Math.max(0, p.x - d.ox));
+        s.y = Math.min(1 - s.h, Math.max(0, p.y - d.oy));
+      }
+      drawSel(ui);
+    });
+    const end = () => {
+      if (!ui.drag) return;
+      ui.drag = null;
+      const s = ui.sel;
+      // A tap, or a sliver under 8 pixels, is not a crop.
+      if (s && (s.w * img.naturalWidth < 8 || s.h * img.naturalHeight < 8)) ui.sel = null;
+      drawSel(ui);
+    };
+    stage.addEventListener("pointerup", end);
+    stage.addEventListener("pointercancel", end);
+
+    apply.addEventListener("click", () => applyCrop(ui));
+    reset.addEventListener("click", () => { ui.sel = null; drawSel(ui); resetCrop(); });
+    cancel.addEventListener("click", () => closeCrop(ui));
+    root.addEventListener("click", (e) => { if (e.target === root) closeCrop(ui); });
+    document.addEventListener("keydown", (e) => { if (e.key === "Escape" && !root.hidden) closeCrop(ui); });
+    return ui;
+  }
+
+  function drawSel(ui) {
+    const s = ui.sel, d = ui.selEl;
+    d.hidden = !s;
+    if (!s) return;
+    d.style.left = (s.x * 100) + "%";
+    d.style.top = (s.y * 100) + "%";
+    d.style.width = (s.w * 100) + "%";
+    d.style.height = (s.h * 100) + "%";
+  }
+
+  function openCrop() {
+    if (!cropOriginal || !currentObjUrl) return;
+    if (!cropUI) cropUI = buildCropUI();
+    cropUI.sel = cropRect ? { x: cropRect.x, y: cropRect.y, w: cropRect.w, h: cropRect.h } : null;
+    cropUI.drag = null;
+    cropUI.img.src = currentObjUrl;   // always the original, so crops never compound
+    drawSel(cropUI);
+    cropUI.root.hidden = false;
+    document.body.style.overflow = "hidden";
+  }
+
+  function closeCrop(ui) {
+    ui.root.hidden = true;
+    ui.drag = null;
+    document.body.style.overflow = "";
+  }
+
+  function applyCrop(ui) {
+    const s = ui.sel, img = ui.img;
+    if (!s) { resetCrop(); closeCrop(ui); return; }
+    const W = img.naturalWidth, H = img.naturalHeight;
+    if (!W || !H) { toast("The image is still loading. Try again."); return; }
+    const sx = Math.round(s.x * W), sy = Math.round(s.y * H);
+    const sw = Math.max(1, Math.min(W - sx, Math.round(s.w * W)));
+    const sh = Math.max(1, Math.min(H - sy, Math.round(s.h * H)));
+    const type = cropOriginal.type === "image/jpeg" ? "image/jpeg" : "image/png";
+    const c = el("canvas", { width: sw, height: sh });
+    try {
+      c.getContext("2d").drawImage(img, sx, sy, sw, sh, 0, 0, sw, sh);
+    } catch (e) {
+      // iOS returns no context for canvases over its size limit (big crops of large photos).
+      toast("That crop could not be made."); return;
+    }
+    c.toBlob((b) => {
+      if (!b) { toast("That crop could not be made."); return; }
+      const base = (cropOriginal.name || "image").replace(/\.[^.]+$/, "");
+      currentBlob = new File([b], base + "-crop" + (type === "image/jpeg" ? ".jpg" : ".png"), { type });
+      if (cropUrl) URL.revokeObjectURL(cropUrl);
+      cropUrl = URL.createObjectURL(currentBlob);
+      $("preview").src = cropUrl;
+      cropRect = { x: s.x, y: s.y, w: s.w, h: s.h, pw: sw, ph: sh };
+      renderCropNote();
+      risTrack("crop_apply", { phone: ON_PHONE });
+      closeCrop(ui);
+      toast("Cropped. Share, copy and download now use the crop.");
+    }, type, 0.95);
+  }
+
   // ---------------------------------------------------------------- wiring
   // 73% of sessions are phones, where you cannot drop a file and there is no
   // Ctrl or Cmd key. The HTML keeps the desktop wording as the no-JS default
@@ -1857,6 +2274,165 @@
     }
   });
 
+  // ------------------------------------------------------ video frame grab
+  // The browser decodes the video in a <video> element, the chosen frame is
+  // drawn to a canvas and handed to handleFile as a PNG, exactly like a photo.
+  // Nothing about the video (name, length, content) goes to analytics.
+  const vid = $("vid");
+  const vidSeek = $("vidSeek");
+  const vidUse = $("vidUse");
+  let vidUrl = null, vidTracked = false;
+
+  function vidFmt(t) {
+    if (!isFinite(t) || t < 0) t = 0;
+    const m = Math.floor(t / 60), s = t - m * 60;
+    return m + ":" + (s < 10 ? "0" : "") + s.toFixed(1);
+  }
+
+  function vidFail() {
+    vidUse.disabled = true;
+    $("vidNote").textContent = "This browser cannot play that video format. Try an MP4 or WebM file, or take a screenshot of the frame and load that instead.";
+    if (!vidTracked) { vidTracked = true; risTrack("video_loaded", { result: "unsupported", phone: ON_PHONE }); }
+  }
+
+  function closeVideo() {
+    vid.removeAttribute("src");
+    vid.load();
+    if (vidUrl) { URL.revokeObjectURL(vidUrl); vidUrl = null; }
+    $("vidPanel").hidden = true;
+  }
+
+  function openVideo(file) {
+    closeVideo();
+    vidTracked = false;
+    vidUse.disabled = true;
+    vidSeek.value = 0;
+    $("vidTime").textContent = vidFmt(0);
+    $("vidNote").textContent = "Drag the slider to the frame you want. The video stays on your device.";
+    $("vidPanel").hidden = false;
+    vidUrl = URL.createObjectURL(file);
+    vid.src = vidUrl;
+    $("vidPanel").scrollIntoView({ behavior: "smooth", block: "nearest" });
+  }
+
+  vid.addEventListener("error", () => { if (vid.getAttribute("src")) vidFail(); });
+  vid.addEventListener("loadedmetadata", () => {
+    // Audio only, or a codec the browser can read the container of but not
+    // the picture (HEVC on some desktops), reports no video size.
+    if (!vid.videoWidth || !vid.videoHeight) { vidFail(); return; }
+    // Recorded WebM often reports an infinite duration until it is sought
+    // past the end once.
+    if (!isFinite(vid.duration)) { vid.currentTime = 1e9; return; }
+    // iOS Safari does not decode or paint any frame of a video that has never
+    // played, so loadeddata may not fire and drawImage comes back blank. A muted
+    // play then pause (allowed for muted playsinline video) wakes the decoder.
+    const start = Math.min(0.001, vid.duration);
+    let pp;
+    try { pp = vid.play(); } catch (err) { pp = null; }
+    if (pp && pp.then) {
+      pp.then(() => { vid.pause(); vid.currentTime = start; })
+        .catch(() => { vid.currentTime = start; });
+    } else {
+      vid.currentTime = start;
+    }
+  });
+  vid.addEventListener("canplay", () => {
+    if (vid.videoWidth && !vid.seeking) vidUse.disabled = false;
+  });
+  vid.addEventListener("durationchange", () => {
+    if (isFinite(vid.duration) && vid.currentTime > vid.duration) vid.currentTime = 0.001;
+  });
+  vid.addEventListener("loadeddata", () => {
+    if (!vid.videoWidth) return;
+    vidUse.disabled = false;
+    if (!vidTracked) { vidTracked = true; risTrack("video_loaded", { result: "ok", phone: ON_PHONE }); }
+  });
+  vid.addEventListener("seeking", () => { vidUse.disabled = true; });
+  vid.addEventListener("seeked", () => {
+    if (vid.videoWidth) vidUse.disabled = false;
+    $("vidTime").textContent = vidFmt(vid.currentTime);
+  });
+  vidSeek.addEventListener("input", () => {
+    const d = vid.duration;
+    if (!isFinite(d) || !d) return;
+    const t = (vidSeek.value / 1000) * d;
+    vid.currentTime = Math.min(t, Math.max(0, d - 0.001));
+    $("vidTime").textContent = vidFmt(t);
+  });
+
+  vidUse.addEventListener("click", () => {
+    const w = vid.videoWidth, h = vid.videoHeight;
+    if (!w || !h) { vidFail(); return; }
+    const c = document.createElement("canvas");
+    c.width = w; c.height = h;
+    try {
+      c.getContext("2d").drawImage(vid, 0, 0, w, h);
+    } catch (err) {
+      toast("That frame could not be read.");
+      return;
+    }
+    c.toBlob((blob) => {
+      if (!blob) { toast("That frame could not be read."); return; }
+      risTrack("frame_used", { phone: ON_PHONE });
+      handleFile(new File([blob], "video-frame.png", { type: "image/png" }), "video");
+    }, "image/png");
+  });
+
+  $("vidClose").addEventListener("click", closeVideo);
+  $("vidPick").addEventListener("click", () => $("vidFile").click());
+  $("vidFile").addEventListener("change", () => {
+    const f = $("vidFile").files[0];
+    $("vidFile").value = "";
+    if (!f) return;
+    if (f.type && !f.type.startsWith("video/")) { toast("That is not a video file."); return; }
+    openVideo(f);
+  });
+
+  // ------------------------------------------------- QR code inside image
+  // Uses the browser's own BarcodeDetector where it exists (Chrome on
+  // Android, Safari has none). No library, no network. Where it is missing
+  // this does nothing. The decoded text is shown as plain text and is never
+  // sent to analytics.
+  let qrDetector = null, qrToken = 0;
+  const qrReady = (async () => {
+    try {
+      if (!("BarcodeDetector" in window)) return false;
+      const formats = await BarcodeDetector.getSupportedFormats();
+      if (!formats || formats.indexOf("qr_code") < 0) return false;
+      qrDetector = new BarcodeDetector({ formats: ["qr_code"] });
+      return true;
+    } catch (err) { return false; }
+  })();
+
+  $("preview").addEventListener("load", async () => {
+    const token = ++qrToken;
+    const old = document.querySelector(".qr-note");
+    if (old) old.remove();
+    if (!(await qrReady)) return;
+    let found;
+    try { found = await qrDetector.detect($("preview")); } catch (err) { return; }
+    if (token !== qrToken) return;
+    const texts = (found || []).map((b) => b.rawValue).filter(Boolean);
+    if (!texts.length) return;
+
+    const note = el("div", { className: "flag cred qr-note" });
+    const body = el("div");
+    body.append(el("strong", {
+      textContent: texts.length > 1
+        ? "This image contains " + texts.length + " QR codes that lead to:"
+        : "This image contains a QR code that leads to:"
+    }));
+    texts.forEach((t) => body.append(el("code", { textContent: t })));
+    body.append(el("p", {
+      textContent: "Be careful with QR codes. Scammers stick fake ones on parking meters and in messages to send people to fake payment pages. Check the domain before you open it."
+    }));
+    note.append(body);
+    $("engines").insertAdjacentElement("afterend", note);
+    // Once per loaded file: the scan reruns on crop and reset of the same image.
+    const qrKey = cropOriginal || currentBlob;
+    if (qrKey && qrKey !== lastQrTracked) { lastQrTracked = qrKey; risTrack("qr_found", { phone: ON_PHONE }); }
+  });
+
   $("urlForm").addEventListener("submit", (e) => {
     e.preventDefault();
     handleUrl($("url").value);
@@ -1867,6 +2443,27 @@
   if (qs.get("url")) {
     $("url").value = qs.get("url");
     handleUrl(qs.get("url"));
+  }
+
+  // Android share sheet: sw.js catches the shared photo, parks it in Cache
+  // Storage on this device and sends us here with ?shared=1. Read it once,
+  // delete it, drop the flag from the URL, and run it through handleFile.
+  if (qs.get("shared") === "1") {
+    history.replaceState(null, "", location.pathname + location.hash);
+    if ("caches" in window) {
+      caches.open("ris-share").then(async (cache) => {
+        const res = await cache.match("/__shared-file");
+        if (!res) { toast("The shared file did not come through. Pick it from your photos."); return; }
+        await cache.delete("/__shared-file");
+        const blob = await res.blob();
+        const name = decodeURIComponent(res.headers.get("X-File-Name") || "shared-image");
+        handleFile(new File([blob], name, { type: blob.type || res.headers.get("Content-Type") || "" }), "share");
+      }).catch(() => {});
+    }
+  }
+
+  if ("serviceWorker" in navigator) {
+    navigator.serviceWorker.register("/sw.js").catch(() => {});
   }
 })();
 </script>

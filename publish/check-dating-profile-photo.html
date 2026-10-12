@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Check a Dating Profile Photo for Catfishing, Free</title>
+<meta name="description" content="Check a dating profile photo for catfishing in a minute. Search it on Google Lens, Yandex, Bing and TinEye at once, free, no account, nothing uploaded.">
+<link rel="canonical" href="https://freereverseimagesearch.netlify.app/check-dating-profile-photo">
+<meta name="theme-color" content="#0071e3">
+<link rel="icon" type="image/svg+xml" href="/favicon.svg">
+<link rel="icon" href="/favicon.ico" sizes="32x32">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://freereverseimagesearch.netlify.app/check-dating-profile-photo">
+<meta property="og:title" content="Check a Dating Profile Photo for Catfishing, Free">
+<meta property="og:description" content="Check a dating profile photo for catfishing in a minute. Search it on Google Lens, Yandex, Bing and TinEye at once, free, no account, nothing uploaded.">
+<meta property="og:image" content="https://freereverseimagesearch.netlify.app/icon-192.png">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Check a Dating Profile Photo for Catfishing, Free">
+<meta name="twitter:description" content="Check a dating profile photo for catfishing in a minute. Search it on Google Lens, Yandex, Bing and TinEye at once, free, no account, nothing uploaded.">
+<meta name="twitter:image" content="https://freereverseimagesearch.netlify.app/icon-192.png">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "Will the person know I searched their photo?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "No. Reverse image engines do not notify anyone, and this tool does not upload your image anywhere. Your file stays in your browser until you choose to hand it to an engine."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Which engine is best for faces?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Yandex is usually the strongest for finding the same face elsewhere. Google Lens is better for places and objects. Try both, since each indexes different parts of the web."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "The search found nothing. Is the profile safe?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Not necessarily. No match only means none of the engines found a copy. Keep the usual precautions: video call before meeting, and never send money to someone you have not met."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Is it free?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Yes. No account, no sign-up and no ads, and the image is never uploaded to this site."
+      }
+    }
+  ]
+}
+</script>
+<script>
+  (function(){
+    try {
+      if (location.hash === '#internal') localStorage.setItem('ris_internal', '1');
+      if (location.hash === '#public') localStorage.removeItem('ris_internal');
+      window.__RIS_INTERNAL = localStorage.getItem('ris_internal') === '1';
+    } catch (e) {}
+  })();
+</script>
+<script>
+  !function(t,e){var o,n,p,r;e.__SV||(window.posthog=e,e._i=[],e.init=function(i,s,a){function g(t,e){var o=e.split(".");2==o.length&&(t=t[o[0]],e=o[1]);t[e]=function(){t.push([e].concat(Array.prototype.slice.call(arguments,0)))}}(p=t.createElement("script")).type="text/javascript",p.async=!0,p.src=s.api_host+"/static/array.js",(r=t.getElementsByTagName("script")[0]).parentNode.insertBefore(p,r);var u=e;for(void 0!==a?u=e[a]=[]:a="posthog",u.people=u.people||[],u.toString=function(t){var e="posthog";return"posthog"!==a&&(e+="."+a),t||(e+=" (stub)"),e},u.people.toString=function(){return u.toString(1)+".people (stub)"},o="capture identify alias people.set people.set_once set_config register register_once unregister opt_out_capturing has_opted_out_capturing opt_in_capturing reset isFeatureEnabled onFeatureFlags getFeatureFlag getFeatureFlagPayload reloadFeatureFlags group updateEarlyAccessFeatureEnrollment getEarlyAccessFeatures getActiveMatchingSurveys getSurveys getNextSurveyStep".split(" "),n=0;n<o.length;n++)g(u,o[n]);e._i.push([i,s,a])},e.__SV=1)}(document,window.posthog||[]);
+
+  // Strip the query string and hash off anything URL shaped before it leaves
+  // the browser. ?url= carries the image being searched.
+  function risScrub(props) {
+    // Every key ending in _url or _referrer, not a fixed list: posthog-js also merges
+    // session props such as $session_entry_url in before this runs.
+    // Nested too: $web_vitals carries the page URL inside $web_vitals_*_event objects.
+    (function scrub(o, depth) {
+      Object.keys(o).forEach(function (k) {
+        var v = o[k];
+        if (v && typeof v === "object" && depth < 3) { scrub(v, depth + 1); return; }
+        if (typeof v !== "string") return;
+        if (k !== "$pathname" && k !== "navigationURL" && !/(_url|_referrer|\$referrer)$/i.test(k)) return;
+        o[k] = v.split("?")[0].split("#")[0];
+      });
+    })(props, 0);
+    return props;
+  }
+
+  posthog.init('phc_C6ScWLnpP7LeHst7KxHdqyGAgUfC9n6eEE2fV9uM79yf', {
+    api_host: 'https://us.i.posthog.com',
+    person_profiles: 'identified_only',
+    autocapture: false,                 // would capture the URL input's contents
+    disable_session_recording: true,    // would record people's images
+    capture_pageleave: true,
+    sanitize_properties: risScrub
+  });
+  posthog.register({ site: 'freereverseimagesearch', page_type: 'task' });
+  if (window.__RIS_INTERNAL) posthog.opt_out_capturing();
+
+  // Small helper so the rest of the page never talks to posthog directly.
+  window.risTrack = function (name, props) {
+    try { if (window.posthog && posthog.capture) posthog.capture(name, props || {}); } catch (e) {}
+  };
+</script>
+<style>
+  :root {
+    --bg: #ffffff; --panel: #ffffff; --panel-2: #f5f5f7; --line: #d2d2d7;
+    --ink: #1d1d1f; --muted: #6e6e73; --edge: #d2d2d7;
+    --hero-ink: #006fdc; --g-blue: #006fde; --accent-soft: #f0f6ff;
+    --radius: 12px;
+    --ui: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, Roboto, "Helvetica Neue", Arial, sans-serif;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #000000; --panel: #1d1d1f; --panel-2: #2c2c2e; --line: #38383c;
+      --ink: #f5f5f7; --muted: #a1a1a6; --edge: #38383c; --accent-soft: #16243f;
+    }
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    background: var(--bg); color: var(--ink);
+    font: 17px/1.55 var(--ui); letter-spacing: -0.01em;
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap { max-width: 720px; margin: 0 auto; padding: 28px 18px 80px; }
+  .crumb { font-size: 15px; margin: 0 0 22px; }
+  a { color: var(--g-blue); }
+  @media (prefers-color-scheme: dark) { a { color: #4da3ff; } }
+  .crumb a { color: var(--muted); text-decoration: none; font-weight: 600; }
+  h1 { font-size: clamp(28px, 6.5vw, 40px); font-weight: 600; letter-spacing: -0.028em; line-height: 1.12; margin: 0 0 14px; }
+  .answer { font-size: 18.5px; line-height: 1.55; margin: 0 0 22px; }
+  .cta {
+    display: inline-block; background: var(--hero-ink); color: #ffffff;
+    font-weight: 600; font-size: 18px; text-decoration: none;
+    padding: 15px 26px; border-radius: var(--radius);
+  }
+  .cta:hover, .cta:focus-visible { background: #0058b0; color: #ffffff; }
+  .cta-note { color: var(--muted); font-size: 14.5px; margin: 10px 0 0; }
+  h2 { font-size: 22px; font-weight: 600; letter-spacing: -0.02em; margin: 40px 0 12px; }
+  ol.steps { margin: 0; padding-left: 1.4em; }
+  ol.steps li { margin: 0 0 10px; padding-left: 4px; }
+  .cant { background: var(--panel-2); border: 1px solid var(--edge); border-radius: var(--radius); padding: 6px 20px; }
+  .cant ul { margin: 12px 0; padding-left: 1.2em; }
+  .cant li { margin: 0 0 8px; color: var(--ink); }
+  .faq > div { border-top: 1px solid var(--edge); padding: 16px 0 4px; }
+  .faq h3 { margin: 0 0 6px; font-size: 16.5px; font-weight: 650; letter-spacing: -0.012em; }
+  .faq p { margin: 0 0 10px; font-size: 16px; line-height: 1.65; color: var(--muted); }
+  .end { margin-top: 40px; padding: 22px; border: 1px solid var(--edge); border-radius: var(--radius); background: var(--accent-soft); }
+  .end p { margin: 0 0 14px; }
+  .related { margin: 36px 0 0; padding: 0; list-style: none; }
+  .related li { margin: 0 0 8px; }
+  footer { margin-top: 48px; padding-top: 20px; border-top: 1px solid var(--edge); color: var(--muted); font-size: 15px; }
+</style>
+</head>
+<body>
+<main class="wrap">
+  <p class="crumb"><a href="/">Free Reverse Image Search</a></p>
+  <h1>Is this dating profile real?</h1>
+  <p class="answer">Search the profile photo on several reverse image engines. If the same face shows up under a different name, on a stock photo site, or on an influencer&#x27;s account, the profile is very likely using someone else&#x27;s pictures.</p>
+  <a class="cta" href="/" data-cta="top">Open the free tool</a>
+  <p class="cta-note">Free, no account. Searches Google Lens, Yandex, Bing and TinEye. Nothing is uploaded.</p>
+
+  <h2>Steps</h2>
+  <ol class="steps">
+    <li>Save or screenshot the profile photo. Crop it to just the photo so app buttons and text do not confuse the search.</li>
+    <li>Open the free tool and drop the image in, or tap to pick it from your photos.</li>
+    <li>Run it through <strong>Yandex</strong> first, which is usually strongest on faces, then Google Lens, Bing and TinEye.</li>
+    <li>Look for the same face under another name, on a modeling or stock photo page, or on a public social account with far more history.</li>
+    <li>Repeat with two or three other photos from the same profile. One clean result proves little; several photos all tracing back to one stranger proves a lot.</li>
+  </ol>
+
+  <h2>What it can't tell you</h2>
+  <div class="cant">
+    <ul>
+      <li>No match does not mean the profile is real. Many genuine people have no public photos, and engines miss plenty.</li>
+      <li>Screenshots carry no camera data, so the metadata panel will usually be empty for these. That is normal.</li>
+      <li>It cannot tell you who is behind the account, only where else the pictures appear.</li>
+    </ul>
+  </div>
+
+  <h2>Questions</h2>
+  <div class="faq">
+    <div>
+      <h3>Will the person know I searched their photo?</h3>
+      <p>No. Reverse image engines do not notify anyone, and this tool does not upload your image anywhere. Your file stays in your browser until you choose to hand it to an engine.</p>
+    </div>
+    <div>
+      <h3>Which engine is best for faces?</h3>
+      <p>Yandex is usually the strongest for finding the same face elsewhere. Google Lens is better for places and objects. Try both, since each indexes different parts of the web.</p>
+    </div>
+    <div>
+      <h3>The search found nothing. Is the profile safe?</h3>
+      <p>Not necessarily. No match only means none of the engines found a copy. Keep the usual precautions: video call before meeting, and never send money to someone you have not met.</p>
+    </div>
+    <div>
+      <h3>Is it free?</h3>
+      <p>Yes. No account, no sign-up and no ads, and the image is never uploaded to this site.</p>
+    </div>
+  </div>
+
+  <div class="end">
+    <p>Ready? The tool runs in your browser and your image stays on your device until you pick an engine.</p>
+    <a class="cta" href="/" data-cta="bottom">Open the free tool</a>
+  </div>
+
+  <h2>Related guides</h2>
+  <ul class="related">
+    <li><a href="/check-rental-listing-photos">Check rental and marketplace listing photos</a></li>
+    <li><a href="/is-this-image-ai-generated">Is this image AI generated?</a></li>
+    <li><a href="/">The reverse image search tool</a></li>
+  </ul>
+
+  <footer>
+    <p>Free Reverse Image Search is free, open source and runs in your browser.
+    <a href="/">Back to the tool</a>.</p>
+  </footer>
+</main>
+<script>
+  document.querySelectorAll('a[data-cta]').forEach(function (a) {
+    a.addEventListener('click', function () {
+      if (window.risTrack) risTrack('guide_cta', { where: a.getAttribute('data-cta') });
+    });
+  });
+</script>
+</body>
+</html>

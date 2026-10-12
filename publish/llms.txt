@@ -19,6 +19,15 @@ What it is not: this is a launcher and a local file inspector, not a search inde
 
 - [Reverse image search tool](https://freereverseimagesearch.netlify.app/): The tool itself, including the EXIF reader and perceptual hashes.
 
+## Guides
+
+- [Check a dating profile photo](https://freereverseimagesearch.netlify.app/check-dating-profile-photo): Catfish check by searching the profile photos on four engines.
+- [Check rental and marketplace listing photos](https://freereverseimagesearch.netlify.app/check-rental-listing-photos): Spot listing photos copied from another listing.
+- [Is this image AI generated?](https://freereverseimagesearch.netlify.app/is-this-image-ai-generated): What Content Credentials (C2PA) and metadata can and cannot tell you. The tool does not detect AI images.
+- [Find the original source of an image](https://freereverseimagesearch.netlify.app/find-original-source-of-image): Find the oldest copy, with TinEye and the other engines.
+- [Reverse image search on iPhone](https://freereverseimagesearch.netlify.app/reverse-image-search-on-iphone): Share into the Google app (not Chrome) for Lens, or use Yandex, Bing and TinEye.
+- [Reverse search a video](https://freereverseimagesearch.netlify.app/reverse-search-a-video): Search one clear frame from the video.
+
 ## Source
 
 - [GitHub repository](https://github.com/benjaminc-tech/free-reverse-image-search): MIT licensed source, a single self-contained HTML file with no server and no build step.
