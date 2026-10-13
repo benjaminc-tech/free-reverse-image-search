@@ -100,6 +100,10 @@
   // Small helper so the rest of the page never talks to posthog directly.
   window.risTrack = function (name, props) {
     try { if (window.posthog && posthog.capture) posthog.capture(name, props || {}); } catch (e) {}
+    // After the first real search action, ask once how they found the tool.
+    if (/^(engine_click|share_click|copy_click)$/.test(name) && window.risAfterSearch) {
+      try { window.risAfterSearch(); } catch (e) {}
+    }
   };
 </script>
 
@@ -387,6 +391,9 @@
   /* QR code found inside the loaded image. The decoded text is shown as
      text, never a link, so nobody is sent anywhere by accident. */
   .qr-note { margin: 16px 0 0; display: block; }
+  .fv-note { margin: 16px 0 0; display: block; }
+  .fv-note p { margin: 0 0 10px; font-size: 15px; color: var(--ink); }
+  .fv-note .mode-pick button { font-size: 14px; }
   .qr-note code { display: block; margin: 6px 0 8px; padding: 6px 8px; overflow-wrap: anywhere; white-space: pre-wrap; }
   .qr-note p { margin: 0; font-size: 15px; color: var(--ink); }
 
@@ -2393,6 +2400,37 @@
     if (f.type && !f.type.startsWith("video/")) { toast("That is not a video file."); return; }
     openVideo(f);
   });
+
+  // ------------------------------------------------- How did you find this?
+  // ChatGPT stopped tagging its links on 2026-10-08 and strips the referrer, so
+  // its visitors now look "direct". One optional tap after the first search is
+  // the only way left to count them. Asked once per browser, never blocks.
+  let fvAsked = false;
+  try { fvAsked = localStorage.getItem("ris_found_via") === "1"; } catch (e) {}
+  window.risAfterSearch = function () {
+    if (fvAsked) return;
+    fvAsked = true;
+    const note = el("div", { className: "flag fv-note" });
+    note.setAttribute("role", "group");
+    note.setAttribute("aria-label", "How did you find this tool?");
+    note.append(el("p", { textContent: "Quick question, one tap: how did you find this tool?" }));
+    const row = el("div", { className: "mode-pick" });
+    const done = (answer) => {
+      try { localStorage.setItem("ris_found_via", "1"); } catch (e) {}
+      if (answer) risTrack("found_via", { answer, phone: ON_PHONE });
+      note.replaceChildren(el("p", { textContent: answer ? "Thanks, that helps." : "No problem." }));
+      setTimeout(() => note.remove(), 2500);
+    };
+    [["ChatGPT", "chatgpt"], ["Another AI", "other_ai"], ["Google", "google"], ["Another search engine", "other_search"],
+     ["A friend or a link", "link"], ["Other", "other"], ["Skip", ""]].forEach(([label, key]) => {
+      const b = el("button", { type: "button", textContent: label });
+      b.addEventListener("click", () => done(key));
+      row.append(b);
+    });
+    note.append(row);
+    const anchor = document.querySelector(".qr-note") || $("engines");
+    anchor.insertAdjacentElement("afterend", note);
+  };
 
   // ------------------------------------------------- QR code inside image
   // Uses the browser's own BarcodeDetector where it exists (Chrome on
