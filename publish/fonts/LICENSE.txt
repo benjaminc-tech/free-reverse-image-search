@@ -1,0 +1,3 @@
+Inter (Rasmus Andersson), Space Grotesk (Florian Karsten) and JetBrains Mono (JetBrains)
+are licensed under the SIL Open Font License, Version 1.1: https://openfontlicense.org
+Files are the Latin variable-weight subsets distributed by Fontsource (v5.2.5).
