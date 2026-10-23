@@ -4,3 +4,6 @@ _base.jpg
 
 .DS_Store
 .netlify/
+.env
+.env.*
+!.env.example
