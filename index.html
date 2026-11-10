@@ -86,16 +86,21 @@
     return props;
   }
 
-  posthog.init('phc_C6ScWLnpP7LeHst7KxHdqyGAgUfC9n6eEE2fV9uM79yf', {
-    api_host: 'https://us.i.posthog.com',
-    person_profiles: 'identified_only',
-    autocapture: false,                 // would capture the URL input's contents
-    disable_session_recording: true,    // would record people's images
-    capture_pageleave: true,
-    sanitize_properties: risScrub
-  });
-  posthog.register({ site: 'freereverseimagesearch', ui: 'v3' });
-  if (window.__RIS_INTERNAL) posthog.opt_out_capturing();
+  // Analytics only on the live site. A downloaded copy runs from file:///C:/Users/<name>/...
+  // and would send that path, username included; local servers and deploy previews are
+  // test traffic. Without init, posthog stays a stub: calls queue in memory, nothing is sent.
+  if (location.protocol === 'https:' && location.hostname === 'freereverseimagesearch.netlify.app') {
+    posthog.init('phc_C6ScWLnpP7LeHst7KxHdqyGAgUfC9n6eEE2fV9uM79yf', {
+      api_host: 'https://us.i.posthog.com',
+      person_profiles: 'identified_only',
+      autocapture: false,                 // would capture the URL input's contents
+      disable_session_recording: true,    // would record people's images
+      capture_pageleave: true,
+      sanitize_properties: risScrub
+    });
+    posthog.register({ site: 'freereverseimagesearch', ui: 'v3' });
+    if (window.__RIS_INTERNAL) posthog.opt_out_capturing();
+  }
 
   // Small helper so the rest of the page never talks to posthog directly.
   window.risTrack = function (name, props) {
