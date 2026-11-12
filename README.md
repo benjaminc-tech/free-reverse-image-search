@@ -2,34 +2,47 @@
 
 **[Try it: freereverseimagesearch.netlify.app](https://freereverseimagesearch.netlify.app)**
 
-Search one image across Google Lens, Yandex, Bing and TinEye at once, read the EXIF and GPS
-data hidden in the file, and fingerprint it with three perceptual hashes.
+Search one image across Google Lens, Yandex, Bing and TinEye at once, see what the file
+itself reveals (EXIF, GPS, AI-generation labels, hidden QR codes), and fingerprint it with
+three perceptual hashes.
 
 Free, no account, no ads, and **nothing is uploaded**. The whole tool is one HTML file that
 does its work in your browser. That claim is the reason this repo exists: you can read the
 file yourself and confirm there is no upload path, which is not something a hosted tool can
 offer you.
 
-![Screenshot](docs/screenshot.png)
+![The tool with an image loaded: share, crop, copy and strip-metadata buttons above the four engine buttons](docs/screenshot.png)
 
-- Reads C2PA Content Credentials: says whether a file declares itself AI generated, what made it,
-  and whether it declares an invisible watermark. It reads the record and does not verify the
-  signature, and a file with no record is not thereby genuine
-- One file, no build step, no dependencies, no server
-- EXIF parsed from raw bytes with no library, including GPS to decimal
-- aHash, dHash and pHash, including a hand-rolled DCT
-- Flags two things worth knowing about a photo: whether it carries location, and whether it
-  was last saved by editing software rather than a camera
+## Use it for
+
+- [Checking a dating profile photo for catfishing](https://freereverseimagesearch.netlify.app/check-dating-profile-photo)
+- [Checking rental and marketplace listing photos for scams](https://freereverseimagesearch.netlify.app/check-rental-listing-photos)
+- [Finding the original source of an image](https://freereverseimagesearch.netlify.app/find-original-source-of-image)
+- [Asking whether an image is AI generated](https://freereverseimagesearch.netlify.app/is-this-image-ai-generated), and what you can actually check
+- [Reverse searching on an iPhone](https://freereverseimagesearch.netlify.app/reverse-image-search-on-iphone)
+- [Reverse searching a video](https://freereverseimagesearch.netlify.app/reverse-search-a-video), by picking one frame
 
 ## What it does
 
-- **Multi-engine search.** Hands one image to Google Lens, Yandex, Bing Visual Search
-  and TinEye in one click.
-- **EXIF extraction.** Camera, lens, timestamps, editing software, and GPS coordinates,
-  parsed from the raw bytes with no library. Works for local files, and for remote URLs
-  whose host allows cross-origin reads.
-- **Perceptual hashing.** aHash, dHash and pHash, computed in-page, so you can tell
-  whether two images are the same picture even after resizing or recompression.
+- **Four engines, one image.** Google Lens, Yandex, Bing Visual Search and TinEye. An image
+  that is already online can go to all four at once.
+- **Built for phones too.** Share the image straight into the Google app from the share
+  sheet, or copy it and paste it into any engine on a desktop.
+- **Crop before you search.** Cut out the face, product or logo you care about so the
+  engines match that instead of the whole picture.
+- **Video frames.** Pick a frame from a video with a slider; the video stays on your device.
+- **EXIF and GPS.** Camera, lens, timestamps, editing software and location, parsed from the
+  raw bytes with no library. Flags whether a photo carries a location and whether it was
+  last saved by editing software rather than a camera.
+- **C2PA Content Credentials.** Says whether a file declares itself AI generated, what made
+  it, and whether it declares an invisible watermark. It reads the record and does not
+  verify the signature, and a file with no record is not thereby genuine.
+- **QR codes inside the image.** Decodes any QR code it finds and shows where it leads,
+  because scammers paste fake ones onto parking meters and into messages.
+- **Download without metadata.** Saves a clean copy with the EXIF and GPS removed.
+- **Perceptual hashes.** aHash, dHash and pHash (with a hand-rolled DCT), so you can tell
+  whether two images are the same picture after resizing or recompression.
+- One file, no build step, no dependencies, no server.
 
 ## The design constraint that shaped everything
 
@@ -38,10 +51,10 @@ splits the problem in two:
 
 - **An image already on the web** has a URL, so it can be handed straight to all four
   engines. This path works completely.
-- **A file on your computer** has no public address. The usual solution is to upload it
-  to a server so the engines can reach it, which means hosting costs, storage, and
-  responsibility for whatever strangers upload. This tool refuses that trade: it copies
-  the image to your clipboard so you can paste it into the engine yourself.
+- **A file on your computer or phone** has no public address. The usual solution is to
+  upload it to a server so the engines can reach it, which means hosting costs, storage,
+  and responsibility for whatever strangers upload. This tool refuses that trade: it hands
+  the image back to you to share or paste into the engine yourself.
 
 That choice is why there is no backend, no database, no bill, and no moderation problem.
 
@@ -52,89 +65,26 @@ on its own. That capability belongs to Google, Yandex and TinEye, who spent 15+ 
 many millions building crawled indexes of billions of images. This tool is a good front
 end to theirs, plus analysis they don't give you.
 
-## Design
-
-Monaco throughout at a 20px base, heavy black rules, `4px 4px 0` offset shadows with no
-blur. Buttons and tiles physically depress on click: the element translates down-right and
-the shadow collapses to zero.
-
-Marvel carries the palette. The wordmark is reversed out of a solid red plate the way a
-comic masthead is, red and black do the structural work, and gold is the second accent.
-Exactly one Google color survives, on the one tile that is actually Google.
-
-| Token | Hex | Paired with | Contrast | Used for |
-|---|---|---|---:|---|
-| `--hero` | `#EC1D24` | flat blocks only | n/a | section chips, accents |
-| `--hero-ink` | `#C7151C` | white | 5.91:1 | masthead plate, primary button, Yandex tile |
-| `--gold` | `#F0B323` | black | 10.21:1 | TinEye tile, edited flag |
-| `--ink` | `#0d0f13` | white | 19.18:1 | Bing tile, privacy badge |
-| `--g-blue` | `#4285F4` | black | 5.38:1 | Google Lens tile, location flag |
-
-Rules that came out of measuring rather than guessing:
-
-- **Marvel red `#EC1D24` fails against both white and black** (4.40:1 and 4.35:1), because
-  it sits at mid luminance. It is only ever used as a flat block with no text on it. Every
-  text-bearing red surface uses `--hero-ink` at `#C7151C`, which clears 4.5:1 on white.
-- **Nameplates carry their own text color.** They are no longer all light, so each engine
-  declares an `ink` alongside its `tile` and every pairing was checked to at least 4.5:1.
-- Gold on red is 3.15:1, which only clears the bar for large bold text. It is used for one
-  word in the 35px masthead and nowhere else.
-
-### Favicon
-
-A magnifier on a Marvel red plate: white lens, gold handle, everything inked in black
-like the rest of the UI. Three decisions came from testing it at real size rather than
-admiring it large:
-
-- **The lens is a solid disc, not a ring.** A ring fills in and turns to mush at 16px.
-- **The gold handle has a black under-stroke.** Gold on red is 3.15:1, so without the
-  ink separating them the handle blurs into the plate at small sizes.
-- **An image-frame concept was rejected outright.** It read fine at 128px and became an
-  unidentifiable smudge at 16px.
-
-Source is `favicon.svg`; it is also inlined into `index.html` as a data URI so the tool
-stays a single self-contained file.
-
-### On a phone
-
-Tested at 393px. Three things needed fixing that only showed up at that width:
-
-- The engine grid used `minmax(400px, 1fr)`, which holds a 400px track even in a
-  345px container, so the tiles overflowed and were silently clipped by the
-  `overflow-x: hidden` guard. Now `minmax(min(400px, 100%), 1fr)`.
-- `word-break: break-all` on table values is right for a 16-character hash and wrong
-  for "TestCam Industries". Now `overflow-wrap: anywhere`, which prefers spaces and
-  only breaks inside a word when it has to.
-- Below 560px the key/value tables stack, label above value, both full width. The
-  nowrap label column was otherwise taking most of the screen.
-
-Color blocks keep their exact hue in dark mode, the way ink on a printed page would. Only
-the surfaces around them invert, and `--edge` flips to near-white so the linework survives.
-
 ## Analytics
 
-The page reports counts to PostHog, and is deliberately narrow about it because the whole
-pitch here is privacy. Three things are switched off or scrubbed:
+**Only the hosted site counts anything. A copy you download and run yourself sends
+nothing**: analytics start only on `https://freereverseimagesearch.netlify.app`, so a copy
+opened from disk, a local server or a preview link never loads PostHog at all.
+
+On the hosted site it reports counts to PostHog, and is deliberately narrow about it
+because the whole pitch here is privacy:
 
 - **Session recording is disabled.** It would record people's images on screen.
 - **Autocapture is disabled.** It would collect the contents of the URL field.
-- **The query string is stripped** off `$current_url`, `$referrer` and `$pathname` before
-  anything is sent, via `sanitize_properties`. This one is not optional: the page accepts
-  `?url=<image>`, so the address bar literally contains the image being searched.
+- **The query string is stripped** off every URL-shaped property before anything is sent,
+  via `sanitize_properties`. This one is not optional: the page accepts `?url=<image>`, so
+  the address bar literally contains the image being searched.
 
-What is left is counts and booleans: pageviews, which engine buttons get pressed, whether
-an image arrived from a file or a URL, and whether it had EXIF, GPS or an editing-software
-tag. **No filenames, no image addresses, and no EXIF values are ever sent.** The page says
-so plainly in its own copy rather than burying it.
+What is left is counts and booleans: pageviews, which buttons get pressed, whether an image
+arrived from a file or a URL, and whether it had EXIF, GPS or an editing-software tag.
+**No filenames, no image addresses, and no EXIF values are ever sent.**
 
-Visiting `/#internal` opts a device out permanently (`/#public` undoes it), which exists
-because self-traffic badly polluted the numbers on an earlier project.
-
-Reporting lives in the analytics repo, not here:
-
-```bash
-cd ~/qrcodepro-analytics && ./venv/bin/python revimg_report.py 30
-```
+Visiting `/#internal` opts a device out permanently (`/#public` undoes it).
 
 ## Tests
 
@@ -177,6 +127,18 @@ Measured behaviour of pHash (distance from the original, 0 = identical):
 That is inherent to how these hashes work, not a bug, but it means you should rotate an
 image back before comparing.
 
+## Running it yourself
+
+Open `index.html` directly, or serve it:
+
+```bash
+python3 -m http.server 8765
+# then open http://localhost:8765/
+```
+
+Clipboard write may be restricted on `file://` in some browsers, which is the only reason
+to bother with the server.
+
 ## Files
 
 ```
@@ -186,36 +148,18 @@ tests/run.sh            runs everything
 tests/make_fixtures.py  builds test-exif.jpg with a hand-built EXIF block
 tests/test_exif.mjs     EXIF parser assertions
 tests/test_hash.mjs     hash cross-check against Python
+tests/test_c2pa.mjs     Content Credentials reader, incl. malformed files
+tests/fixture-c2pa-chatgpt.png  a real C2PA-labelled image used by that test
 tests/test_robustness.py  Hamming distances across real edits
 ```
 
 `test-exif.jpg` and `_base.jpg` are generated by the tests and can be deleted.
 
-## Running locally
-
-```bash
-python3 -m http.server 8765
-# then open http://localhost:8765/
-```
-
-Opening `index.html` directly from disk also works, though clipboard write may be
-restricted on `file://` in some browsers.
-
-## Running it yourself
-
-Open `index.html` directly, or serve it:
-
-```bash
-python3 -m http.server 8765
-```
-
-Clipboard write may be restricted on `file://` in some browsers, which is the only reason
-to bother with the server locally.
-
 ## Deploying
 
-`publish/` holds exactly what goes on the web: the page, the icons, `robots.txt`,
-`sitemap.xml` and `_headers`. The test fixtures and test suite deliberately stay out of it.
+`publish/` holds exactly what goes on the web: the page, the guides, the icons,
+`robots.txt`, `sitemap.xml` and `_headers`. The test fixtures and test suite deliberately
+stay out of it.
 
 ```bash
 cp index.html favicon.svg publish/
